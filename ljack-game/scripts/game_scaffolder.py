@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.2.0] Multi-Engine Zero-Token Game Scaffolder
+[LJack Game Protocol v1.3.0] Multi-Engine Zero-Token Game Scaffolder
 ====================================================================
 Instantly generates complete, production-grade Game Harness scaffolding
 across 3 major engine ecosystems:
@@ -552,24 +552,48 @@ def scaffold_multi_engine(target_dir: str, engine_type: str = "pygame", game_tit
     if engine_type == "pygame":
         os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
         os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "locales"), exist_ok=True)
         files = {
             os.path.join(target_dir, "src", "__init__.py"): "",
             os.path.join(target_dir, "src", "core", "__init__.py"): "",
             os.path.join(target_dir, "src", "core", "state.py"): TEMPLATE_PYGAME_STATE,
             os.path.join(target_dir, "src", "core", "simulation.py"): TEMPLATE_PYGAME_SIM,
+            os.path.join(target_dir, "src", "core", "save_manager.py"): '''# -*- coding: utf-8 -*-
+import os, json, tempfile
+def atomic_save(path: str, data: dict):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    tmp = tempfile.NamedTemporaryFile("w", dir=os.path.dirname(os.path.abspath(path)), delete=False, encoding="utf-8")
+    try:
+        json.dump(data, tmp, indent=2, ensure_ascii=False)
+        tmp.flush(); os.fsync(tmp.fileno()); tmp.close()
+        os.replace(tmp.name, path)
+    except Exception as e:
+        if os.path.exists(tmp.name): os.remove(tmp.name)
+        raise e
+''',
             os.path.join(target_dir, "tests", "test_sim_headless.py"): TEMPLATE_PYGAME_TEST,
-            os.path.join(target_dir, "run_game.py"): "# Run with: python run_game.py\\nprint('Pygame Ready')",
-            os.path.join(target_dir, "README.md"): f"# {game_title} (Pygame)\\nBuilt with LJack Game Protocol.",
+            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '",\\n  "MSG_START": "Press Space to Start"\\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '",\\n  "MSG_START": "시작하려면 스페이스바를 누르세요"\\n}',
+            os.path.join(target_dir, "run_game.py"): '''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os, sys, pygame
+PRODUCTION_BUILD = False  # Set True for commercial Steam/Stove packaging
+print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
+''',
+            os.path.join(target_dir, "README.md"): f"# {game_title} (Pygame)\\nBuilt with LJack Game Protocol (Commercial Edition).",
         }
 
     elif engine_type == "tauri":
         os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
         os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "locales"), exist_ok=True)
         files = {
             os.path.join(target_dir, "src", "core", "state.js"): TEMPLATE_TAURI_STATE_JS,
             os.path.join(target_dir, "src", "core", "simulation.js"): TEMPLATE_TAURI_SIM_JS,
             os.path.join(target_dir, "index.html"): TEMPLATE_TAURI_INDEX_HTML,
             os.path.join(target_dir, "tests", "test_sim_headless.js"): TEMPLATE_TAURI_HEADLESS_TEST_JS,
+            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
             os.path.join(target_dir, "package.json"): '{\\n  "name": "' + game_title.lower() + '",\\n  "version": "0.1.0",\\n  "type": "module"\\n}',
             os.path.join(target_dir, "README.md"): f"# {game_title} (Tauri + HTML5)\\nBuilt with LJack Game Protocol.",
         }
@@ -578,11 +602,14 @@ def scaffold_multi_engine(target_dir: str, engine_type: str = "pygame", game_tit
         os.makedirs(os.path.join(target_dir, "scripts", "core"), exist_ok=True)
         os.makedirs(os.path.join(target_dir, "scenes"), exist_ok=True)
         os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "locales"), exist_ok=True)
         files = {
             os.path.join(target_dir, "project.godot"): TEMPLATE_GODOT_PROJECT.format(game_title=game_title),
             os.path.join(target_dir, "scripts", "core", "state.gd"): TEMPLATE_GODOT_STATE_GD,
             os.path.join(target_dir, "scripts", "core", "simulation.gd"): TEMPLATE_GODOT_SIM_GD,
             os.path.join(target_dir, "tests", "test_sim_headless.gd"): TEMPLATE_GODOT_HEADLESS_TEST,
+            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
             os.path.join(target_dir, "README.md"): f"# {game_title} (Godot 4.x)\\nBuilt with LJack Game Protocol.",
         }
 
