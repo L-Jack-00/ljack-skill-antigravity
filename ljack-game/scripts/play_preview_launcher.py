@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.0.0] Playable Review Gate Helper
-=========================================================
-Extracts game balance parameters, controls, and launch commands
-to present a structured "Playable Review Request" to the user
-prior to any packaging or release deployment.
+[LJack Game Protocol v1.2.0] Multi-Engine Playable Review Gate Helper
+=====================================================================
+Detects engine ecosystem (Pygame, Tauri/HTML5, Godot 4.x), extracts
+game-feel tuning parameters, and generates structured Playable Review
+briefs for the user.
 
 Usage:
     python play_preview_launcher.py <game_directory>
@@ -21,59 +21,80 @@ if sys.stdout.encoding != 'utf-8':
     except Exception:
         pass
 
-def inspect_review_parameters(game_dir: str):
+def detect_engine_and_inspect(game_dir: str):
+    game_dir = os.path.abspath(game_dir)
     print("=" * 65)
-    print(" [LJack Game Protocol] Playable Review Gate Inspection")
+    print(" [LJack Game Protocol v1.2.0] Playable Review Gate Inspection")
     print("=" * 65)
-    print(f"[*] Target Game Directory: {os.path.abspath(game_dir)}")
+    print(f"[*] Target Directory: {game_dir}")
 
-    state_path = os.path.join(game_dir, "src", "core", "state.py")
-    run_path = os.path.join(game_dir, "run_game.py")
+    is_godot = os.path.isfile(os.path.join(game_dir, "project.godot"))
+    is_tauri = os.path.isfile(os.path.join(game_dir, "index.html")) or os.path.isdir(os.path.join(game_dir, "src-tauri"))
+    is_pygame = os.path.isfile(os.path.join(game_dir, "run_game.py")) or os.path.isfile(os.path.join(game_dir, "src", "core", "state.py"))
 
-    if not os.path.isfile(run_path):
-        print(f"[WARN] Playable launcher 'run_game.py' not found at {run_path}")
+    engine_name = "Unknown"
+    launch_cmd = ""
+    state_file = ""
+
+    if is_godot:
+        engine_name = "Godot Engine 4.x (GDScript)"
+        launch_cmd = f"godot --path \"{game_dir}\""
+        state_file = os.path.join(game_dir, "scripts", "core", "state.gd")
+    elif is_tauri:
+        engine_name = "Tauri + HTML5 / Canvas"
+        launch_cmd = f"cd \"{game_dir}\" && (npm run tauri dev || npx serve .)"
+        state_file = os.path.join(game_dir, "src", "core", "state.js")
+    elif is_pygame:
+        engine_name = "Pygame (Python 2D)"
+        launch_cmd = f"python \"{os.path.join(game_dir, 'run_game.py')}\""
+        state_file = os.path.join(game_dir, "src", "core", "state.py")
+    else:
+        engine_name = "Generic / Text Engine"
+        launch_cmd = f"python \"{os.path.join(game_dir, 'run_game.py')}\""
 
     params = {}
-    if os.path.isfile(state_path):
+    if state_file and os.path.isfile(state_file):
         try:
-            with open(state_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(state_file, "r", encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line = line.strip()
-                    if any(keyword in line for keyword in ["gravity", "speed", "jump_strength", "hp", "friction"]):
-                        parts = line.split(":")
-                        if len(parts) == 2:
-                            name = parts[0].strip()
-                            val_part = parts[1].split("=")[-1].strip() if "=" in parts[1] else parts[1].strip()
-                            params[name] = val_part
+                    if any(k in line.lower() for k in ["gravity", "speed", "jump", "hp", "fall"]):
+                        if "=" in line:
+                            parts = line.split("=")
+                            name_side = parts[0].replace("var", "").replace("this.", "").strip()
+                            key = name_side.split(":")[0].strip()
+                            val = parts[1].replace(";", "").replace(",", "").strip()
+                            params[key] = val
         except Exception:
             pass
 
-    print("\n🎮 [PLAYABLE REVIEW BRIEF FOR USER]")
+    print(f"[*] Detected Engine : {engine_name}")
     print("-" * 65)
-    print("▶ Run Game Locally:")
-    print(f"  python \"{os.path.join(game_dir, 'run_game.py')}\"")
-    print("\n▶ Detected Tuning Parameters (Game Feel & Balance):")
+    print("🎮 [PLAYABLE REVIEW BRIEF FOR USER]")
+    print("▶ Run Game Locally (One-Click Launch):")
+    print(f"  {launch_cmd}")
+    print("\n▶ Detected Game-Feel Tuning Parameters (Hot-Reloadable):")
     if params:
         for k, v in params.items():
-            print(f"  - {k:<15} : {v}")
+            print(f"  - {k:<18} : {v}")
     else:
         print("  - Default internal balance configuration active.")
-    
+
     print("-" * 65)
     print("★ Playable Review Checklist for User:")
-    print("  1. Jump Arc & Timing : Does the jump feel responsive or floaty?")
-    print("  2. Movement Speed    : Is horizontal velocity well-paced?")
-    print("  3. Difficulty Curve  : Are obstacles and enemy patterns fair?")
-    print("  4. Polish & Visuals  : Do particles/animations line up with input?")
+    print("  1. Jump & Movement  : Does the horizontal speed and jump arc feel responsive?")
+    print("  2. In-Game Tuner    : Press [F1] to fine-tune gravity and speed live!")
+    print("  3. Difficulty Curve : Are platforms, obstacles, and enemy pacing fair?")
+    print("  4. Final Approval   : Reply with feedback or 'Approved' to trigger packaging.")
     print("=" * 65)
     return 0
 
 def main():
-    parser = argparse.ArgumentParser(description="LJack Game Playable Review Helper")
+    parser = argparse.ArgumentParser(description="LJack Playable Review Helper")
     parser.add_argument("game_dir", nargs="?", default=".", help="Target game directory")
     args = parser.parse_args()
 
-    return inspect_review_parameters(args.game_dir)
+    return detect_engine_and_inspect(args.game_dir)
 
 if __name__ == "__main__":
     sys.exit(main())
