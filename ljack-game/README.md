@@ -1,25 +1,26 @@
 # 엘잭 게임 프로토콜 (LJack Game Protocol)
-## 게임 런타임 하네스 엔지니어링 & 초자율 에이전틱 개발 프로토콜 (v1.0.0)
+## 게임 런타임 하네스 엔지니어링 & 초자율 에이전틱 개발 프로토콜 (v1.1.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-purple.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.1.0-green.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
-본 저장소는 게임 개발 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/무한루프)을 **헤드리스 1만 틱 시뮬레이터**로 무중단 자가 치유하되,  
-최종 패키징 배포 전 반드시 **사용자 직접 플레이 검수 관문(Playable Review Gate)**을 거쳐 손맛과 재미를 튜닝하도록 규정하는 최상위 게임 개발 프로토콜입니다.
+본 저장소는 게임 개발 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/맵도달불가/무한루프)을 **헤드리스 1만 틱 시뮬레이터 및 Reachability Solver**로 무중단 자가 치유하되,  
+최종 패키징 배포 전 반드시 **인게임 실시간 손맛 튜너(F1/F2 오버레이)를 통한 사용자 직접 플레이 검수 관문(Playable Review Gate)**을 거쳐 완성도를 극대화하도록 규정하는 최상위 게임 개발 프로토콜입니다.
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v1.0.0)
+## 📂 저장소 및 모듈 구조 (v1.1.0)
 
 ```text
 ljack-game/
 ├── SKILL.md                          # [Fast-Path 코어] 게임 8대 기둥, 10대 강령, 6단계 파이프라인
 ├── README.md                         # 저장소 안내 및 설치/동기화 가이드
 ├── scripts/                          # [내장 게임 자동화 도구]
-│   ├── game_scaffolder.py            # 8대 기둥 게임 골격 0초 생성 (LLM 생성 토큰 15,000개 절감)
-│   ├── tick_sim_runner.py            # 렌더링 없는 헤드리스 1만 틱 초고속 시뮬레이터
-│   └── play_preview_launcher.py      # 사용자 플레이 검수용 조작법 및 밸런스 파라미터 추출기
+│   ├── game_scaffolder.py            # [기둥 1 & 5] Pygame 골격 및 F1 실시간 손맛 튜너 0초 생성
+│   ├── tick_sim_runner.py            # [기둥 2 & 4] Reachability Solver & 헤드리스 1만 틱 시뮬레이터
+│   ├── play_preview_launcher.py      # [기둥 6] 사용자 플레이 검수용 조작법 & 밸런스 파라미터 추출기
+│   └── web_packager.py               # [기둥 8] WebAssembly(HTML5) 브라우저 원클릭 웹 패키저
 └── references/                       # [심화 게임 도메인 레퍼런스]
     ├── game_feel_tuning.md           # 코요테 타임, 점프 버퍼링, 히트스톱 등 손맛 5대 레시피
     └── collision_and_physics.md      # AABB 충돌 및 고속 투사체 터널링 방지 서브스텝 명세

@@ -3,7 +3,7 @@
 
 [![Antigravity Skills](https://img.shields.io/badge/Antigravity-Skills-blue.svg)](https://deepmind.google/technologies/antigravity/)
 [![LJack Skill](https://img.shields.io/badge/ljack--skill-v7.4.0-green.svg)](#-1-ljack-skill-v740)
-[![LJack Game](https://img.shields.io/badge/ljack--game-v1.0.0-purple.svg)](#-2-ljack-game-v100)
+[![LJack Game](https://img.shields.io/badge/ljack--game-v1.1.0-purple.svg)](#-2-ljack-game-v110)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
 본 저장소는 Google Antigravity(AGY) 환경에서 AI 에이전트가 사소한 확인을 위해 멈추지 않고 자체 테스트, 무중단 자가 치유(Self-Healing), 격리 패키징, 원클릭 배포까지 단일 흐름으로 완주하도록 규정하는 **LJack 런타임 하네스 엔지니어링 프로토콜 모음(Suite)**입니다.
@@ -22,16 +22,17 @@
   - `harness_doctor.py`: AST 정적 분석 기반 하네스 준수율 채점(0~100) 및 3줄 핵심 진단.
   - `ux_copy_linter.py`, `release_cleaner.py`, `pixel_luminance_guard.py`.
 
-### 2. 🎮 [ljack-game](./ljack-game/) (v1.0.0)
+### 2. 🎮 [ljack-game](./ljack-game/) (v1.1.0)
 * **목적**: 2D 아케이드/인디 게임, 물리 시뮬레이션, 게임 루프 최적화.
 * **8대 기둥**: 결정론적 60Hz 고정 틱, 헤드리스 1만 틱 시뮬레이터, 물리 터널링 방지, 입력 버퍼링, 5대 손맛 레시피(코요테 타임/점프 선입력/히트스톱).
 * **⭐ 플레이어블 검수 관문 (Playable Review Gate)**:
-  - 기술적 결함(충돌, 메모리 누수)은 에이전트가 1만 틱 시뮬레이터로 100% 자가 치유.
-  - 최종 패키징 배포 전 **반드시 사용자에게 직접 플레이(`python run_game.py`) 및 밸런스 요약을 제출하여 손맛과 난이도를 검수**받는 6단계 파이프라인 탑재.
+  - 기술적 결함(충돌, 도달 불가 맵, 메모리 누수)은 1만 틱 시뮬레이터와 Reachability Solver로 100% 자가 치유.
+  - 최종 패키징 배포 전 **반드시 사용자에게 직접 플레이(`python run_game.py`) 및 인게임 실시간 손맛 튜너(F1/F2 오버레이)를 제공하여 조작감을 검수**받는 6단계 파이프라인 탑재.
 * **게임 툴킷**:
-  - `game_scaffolder.py`: 게임 뼈대 0초 생성 (토큰 15,000개 절감).
-  - `tick_sim_runner.py`: 렌더링 없는 헤드리스 1만 틱 초고속 시뮬레이터 (83ms 완료).
+  - `game_scaffolder.py`: Pygame 골격 및 F1 실시간 손맛 튜너 0초 생성 (토큰 15,000개 절감).
+  - `tick_sim_runner.py`: Reachability Solver(도달 불가 맵 감사) 및 헤드리스 1만 틱 시뮬레이터.
   - `play_preview_launcher.py`: 사용자 검수용 밸런스 파라미터 요약기.
+  - `web_packager.py`: WebAssembly(HTML5) 브라우저 원클릭 웹 패키저.
 
 ---
 
@@ -47,10 +48,10 @@ ljack-skill-antigravity/
 │   ├── scripts/                      # scaffolder, doctor, ux_copy, cleaner, pixel_guard
 │   └── references/                   # cleanroom, domain_guides, troubleshooting
 │
-└── ljack-game/                       # 🎮 게임 개발 & 플레이어블 검수 프로토콜 (v1.0.0)
+└── ljack-game/                       # 🎮 게임 개발 & 플레이어블 검수 프로토콜 (v1.1.0)
     ├── SKILL.md                      # 게임 Fast-Path 코어 지침
     ├── README.md                     # ljack-game 상세 설명서
-    ├── scripts/                      # game_scaffolder, tick_sim_runner, play_preview_launcher
+    ├── scripts/                      # game_scaffolder, tick_sim_runner, play_preview_launcher, web_packager
     └── references/                   # game_feel_tuning, collision_and_physics
 ```
 
