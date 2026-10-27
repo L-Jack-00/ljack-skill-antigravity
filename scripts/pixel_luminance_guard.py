@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.3.0] Pixel Luminance & Alpha Mask Integrity Guard
+[LJack Protocol v7.4.0] Pixel Luminance & Alpha Mask Integrity Guard
 ======================================================================
 Headless validator that checks captured UI screenshots or image assets
 for unwanted high-luminance border artifacts (e.g. 1px native Qt bevels

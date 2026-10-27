@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.3.0] Release Sanitization & Artifact Rig
+[LJack Protocol v7.4.0] Release Sanitization & Artifact Rig
 =============================================================
 Wipes transient testing logs, cache artifacts, and temporary files
 prior to packaging, and enforces the `_internal/` data isolation rule.

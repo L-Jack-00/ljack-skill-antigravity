@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.3.0] UX Copy & Surface Integrity Linter
+[LJack Protocol v7.4.0] UX Copy & Surface Integrity Linter
 ===========================================================
 Scans source code, UI templates, dialogs, tooltips, and release notes
 for internal developer/harness/AI jargon and enforces user-friendly,

@@ -1,26 +1,28 @@
 # 엘잭 스킬 (LJack Protocol)
-## 범용 런타임 하네스 엔지니어링 & 초자율 에이전틱 개발 프로토콜 (v7.3.0)
+## 범용 런타임 하네스 엔지니어링 & 초자율 에이전틱 개발 프로토콜 (v7.4.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-blue.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-7.3.0-green.svg)](#)
+[![Version](https://img.shields.io/badge/Version-7.4.0-green.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
 본 저장소는 Google Antigravity(AGY) 환경에서 AI 에이전트가 사소한 확인을 위해 중간에 멈추지 않고,  
-견고한 **[설계/톤앤매너 고정 ➔ 코딩 ➔ 빌드 ➔ 자체 테스트 ➔ 자가 치유(Self-Healing) ➔ 비주얼/인터랙션/UX카피 감사 ➔ 격리 패키징 ➔ 원클릭 GitHub 릴리즈]**까지 단일 흐름으로 완주하도록 규정하는 최상위 아키텍처 및 자율 실행 프로토콜입니다.
+견고한 **[설계/톤앤매너 고정 ➔ 스캐폴딩 ➔ 코딩 ➔ 자체 테스트 ➔ 자가 치유(Self-Healing) ➔ 비주얼/인터랙션/닥터/UX카피 감사 ➔ 격리 패키징 ➔ 원클릭 GitHub 릴리즈]**까지 단일 흐름으로 완주하도록 규정하는 최상위 아키텍처 및 자율 실행 프로토콜입니다.
 
 > **⚠️ 버전 독립성 불변 원칙 (Version Independence Principle)**:  
-> 본 프로토콜의 버전(v7.3.0)과 대상 프로젝트(응용프로그램)의 자체 버전은 완전히 별개입니다.  
+> 본 프로토콜의 버전(v7.4.0)과 대상 프로젝트(응용프로그램)의 자체 버전은 완전히 별개입니다.  
 > 에이전트는 프로젝트 착수 시 절대로 스킬의 버전 번호를 대상 소프트웨어의 버전이나 파일명에 투영하지 않으며, 대상 소프트웨어 고유의 버전 로드맵(SemVer 기본값 `v1.0.0`)을 독립적으로 유지합니다.
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v7.3.0 Optimized)
+## 📂 저장소 및 모듈 구조 (v7.4.0 Optimized)
 
 ```text
 ljack-skill/
 ├── SKILL.md                          # [Fast-Path 코어] 10대 기둥, 11대 강령, 5단계 파이프라인
 ├── README.md                         # 저장소 안내 및 설치/동기화 가이드
-├── scripts/                          # [내장 자동화 검증 도구]
+├── scripts/                          # [내장 자동화 도구 및 린터]
+│   ├── harness_scaffolder.py         # [신설] 10대 기둥 골격 0초 생성 (LLM 생성 토큰 12,000개 절감)
+│   ├── harness_doctor.py             # [신설] AST 정적 분석 기반 하네스 건강 점수(0~100) 및 3줄 진단
 │   ├── ux_copy_linter.py             # UI 표면 개발자 은어 0.1초 전수 검출 린터
 │   ├── release_cleaner.py            # 배포 전 임시 로그 소거 및 아티팩트 청결화
 │   └── pixel_luminance_guard.py      # 오프스크린 1px 고휘도 테두리 및 알파 마스크 검증
