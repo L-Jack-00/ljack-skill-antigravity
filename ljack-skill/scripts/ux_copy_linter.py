@@ -40,9 +40,18 @@ PROHIBITED_TERMS = {
     "mock": "가상 데이터, 테스트용 설정 (프로덕션 노출 금지)",
     "머신 러닝 수정": "기능 개선, 정확도 향상",
     "llm": "스마트 엔진, 지능형 지원",
+    # Game domain specific internal jargon
+    "히트박스": "타격 범위, 피격 영역, 경계선",
+    "hitbox": "attack range, hit area, boundary",
+    "서브스텝": "정밀 물리 계산",
+    "substep": "precise physics step",
+    "코요테 타임": "조작 보정 유예, 반응성 개선",
+    "coyote time": "jump forgiveness, response buffer",
+    "치트": "보조 옵션, 편의 기능 (상용 릴리즈 봉인)",
+    "시뮬레이터": "연습장, 시뮬레이션 모드, 샌드박스",
 }
 
-# Targeted UI/User-facing string patterns
+# Targeted UI/User-facing string patterns (Desktop, Web, Game UI)
 UI_PATTERNS = [
     re.compile(r'setWindowTitle\s*\(\s*["\'](.*?)["\']\s*\)', re.IGNORECASE),
     re.compile(r'setText\s*\(\s*["\'](.*?)["\']\s*\)', re.IGNORECASE),
@@ -53,10 +62,16 @@ UI_PATTERNS = [
     re.compile(r'toast\s*\(\s*["\'](.*?)["\']\s*\)', re.IGNORECASE),
     re.compile(r'placeholder\s*=\s*["\'](.*?)["\']', re.IGNORECASE),
     re.compile(r'title\s*=\s*["\'](.*?)["\']', re.IGNORECASE),
+    # Game engine display patterns (Pygame, Godot GDScript, HTML5 Canvas)
+    re.compile(r'draw_text\s*\(\s*["\'](.*?)["\']', re.IGNORECASE),
+    re.compile(r'fillText\s*\(\s*["\'](.*?)["\']', re.IGNORECASE),
+    re.compile(r'render\s*\(\s*["\'](.*?)["\']', re.IGNORECASE),
+    re.compile(r'(?<!_)text\s*=\s*["\'](.*?)["\']', re.IGNORECASE),
+    re.compile(r'set_text\s*\(\s*["\'](.*?)["\']', re.IGNORECASE),
 ]
 
-IGNORED_DIRS = {'.git', '.svn', '__pycache__', 'node_modules', '.idea', '.vscode', 'venv', 'env', '_internal'}
-SCANNABLE_EXTS = {'.py', '.cs', '.js', '.ts', '.jsx', '.tsx', '.html', '.json', '.md', '.txt', '.cpp', '.h', '.rs'}
+IGNORED_DIRS = {'.git', '.svn', '__pycache__', 'node_modules', '.idea', '.vscode', 'venv', 'env', '_internal', '.godot', 'dist', 'dist_web'}
+SCANNABLE_EXTS = {'.py', '.cs', '.js', '.ts', '.jsx', '.tsx', '.html', '.json', '.md', '.txt', '.cpp', '.h', '.rs', '.gd'}
 
 def audit_text(text, file_path, line_no=None, context_label=""):
     violations = []
@@ -74,13 +89,35 @@ def audit_text(text, file_path, line_no=None, context_label=""):
 
 def scan_file(file_path):
     violations = []
-    # Protocol spec files in ljack-skill define the terms themselves, so skip meta-audit
+    # Protocol spec files in ljack-skill/ljack-game define the terms themselves, so skip meta-audit
     norm_path = os.path.normpath(file_path).lower()
-    if "ljack-skill" in norm_path and (norm_path.endswith("skill.md") or "references" in norm_path or "scripts" in norm_path):
+    if ("ljack-skill" in norm_path or "ljack-game" in norm_path) and (
+        norm_path.endswith("skill.md") or "references" in norm_path or "scripts" in norm_path or norm_path.endswith("readme.md")
+    ):
         return violations
 
     is_markdown_or_text = file_path.endswith(('.md', '.txt'))
     is_release_note = is_markdown_or_text and ('release' in norm_path or 'changelog' in norm_path)
+    is_locale_json = file_path.endswith('.json') and ('locale' in norm_path or 'i18n' in norm_path or 'lang' in norm_path)
+
+    # 1. Specialized audit for localization JSON files (inspecting string values)
+    if is_locale_json:
+        try:
+            import json
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                def check_dict(d, prefix=""):
+                    for k, v in d.items():
+                        key_name = f"{prefix}.{k}" if prefix else k
+                        if isinstance(v, str):
+                            violations.extend(audit_text(v, file_path, context_label=f"[{key_name}] {v}"))
+                        elif isinstance(v, dict):
+                            check_dict(v, key_name)
+                check_dict(data)
+                return violations
+        except Exception:
+            pass
 
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -89,7 +126,7 @@ def scan_file(file_path):
         return violations
 
     for idx, line in enumerate(lines, start=1):
-        # 1. Inspect targeted UI setter functions
+        # 2. Inspect targeted UI setter functions
         for pattern in UI_PATTERNS:
             matches = pattern.findall(line)
             for m in matches:
@@ -97,7 +134,7 @@ def scan_file(file_path):
                 for text_item in texts_to_check:
                     violations.extend(audit_text(text_item, file_path, idx, line.strip()))
 
-        # 2. If it's a release note or markdown user doc, inspect directly
+        # 3. If it's a release note or markdown user doc, inspect directly
         if is_release_note:
             violations.extend(audit_text(line, file_path, idx, line.strip()))
 

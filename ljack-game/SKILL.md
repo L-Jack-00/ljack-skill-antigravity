@@ -1,36 +1,39 @@
 ---
 name: ljack-game
 description: >-
-  엘잭 게임 프로토콜 (LJack Game Protocol): 멀티 엔진 런타임 하네스 엔지니어링 및 초자율 에이전틱 개발 프로토콜 (v1.3.0).
-  사용자가 '엘잭 게임', '게임 개발', '인디 게임', '게임 하네스', '상용화', '스팀 출시', 'Pygame', 'Tauri', 'HTML5 캔버스', '고도 엔진', 'Godot' 등을 요청하거나,
+  엘잭 게임 프로토콜 (LJack Game Protocol): 멀티 엔진 런타임 하네스 엔지니어링 및 초자율 에이전틱 개발 프로토콜 (v1.5.0).
+  사용자가 '엘잭 게임', '게임 개발', '인디 게임', '게임 하네스', '상용화', '스팀 출시', 'Pygame', 'Tauri', 'HTML5 캔버스', '고도 엔진', 'Godot', 'Rust', 'Rust+Python' 등을 요청하거나,
   결정론적 고정 틱 루프, 헤드리스 1만 틱 시뮬레이터, 사용자 플레이 검수 관문(Playable Review Gate),
   인게임 실시간 손맛 튜너(F1/F2 오버레이), 원자적 세이브(Atomic Save), 다국어(i18n) 현지화, 상용 릴리즈 닥터,
+  그래픽 툴 나침반(UI 벡터, SDXL 일러스트, 도트 스프라이트, 셰이더 이펙트), 오디오 런타임 하네스(WebAudio 제스처 가드, 3-Bus 볼륨, 무음 디바이스 폴백),
   스팀/스토브/itch.io 상용 출시 파이프라인을 원할 때 활성화합니다.
 ---
 
 # 엘잭 게임 스킬 (LJack Game Protocol)
-## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.3.0)
+## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.5.0)
 
 > **💡 시스템 지침 (System Directive)**:  
-> 본 스킬은 상용 인디 게임 제작 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/메모리)을 헤드리스 1만 틱 시뮬레이터로 100% 자가 치유하되,  
+> 본 스킬은 상용 인디 게임 제작 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/메모리/오디오)을 헤드리스 1만 틱 시뮬레이터로 100% 자가 치유하되,  
 > **1) 배포 전 사용자 직접 플레이 검수(Playable Review Gate)를 통한 손맛 조율**,  
-> **2) 상용 릴리즈 닥터(`game_release_doctor.py`)를 통한 세이브 원자성/다국어/디버그 봉인 점검**을 완결하도록 규정하는 최상위 게임 개발 프로토콜입니다.
+> **2) 상용 릴리즈 닥터(`game_release_doctor.py`)를 통한 세이브 원자성/다국어/오디오 안전망/UX카피/디버그 봉인 점검**,  
+> **3) 그래픽 종류별 실전 툴 나침반(`references/game_graphics_toolchain_guide.md`)을 통한 가볍고 빠른 에셋 구축**,  
+> **4) 무결점 오디오 런타임 하네스(`references/audio_runtime_harness_guide.md`)를 통한 크래시 없는 사운드 파이프라인**을 완결하도록 규정하는 최상위 게임 개발 프로토콜입니다.
 
 > **⚠️ 버전 독립성 불변 원칙 (Version Independence Principle)**:  
-> **본 프로토콜의 버전(v1.3.0)과 대상 게임의 자체 버전은 완전히 별개입니다.**  
+> **본 프로토콜의 버전(v1.5.0)과 대상 게임의 자체 버전은 완전히 별개입니다.**  
 > 대상 게임은 사용자가 명시한 버전 또는 표준 SemVer 기본값(`v0.1.0` / `v1.0.0`)부터 온전히 독립적인 생명주기를 갖습니다.
 
 ---
 
-## 1. 멀티 엔진 게임 런타임 하네스 8대 핵심 기둥
+## 1. 멀티 엔진 게임 런타임 하네스 10대 핵심 기둥
 
 ```text
 [입력 디바이스: 키보드/마우스/게임패드] ──> [입력 버퍼 큐 & Stuck 방지 가드]
                                                          │
 ┌────────────────────────────────────────────────────────▼──────────────────────────────┐
-│                게임 런타임 하네스 코어 (Pygame / Tauri+HTML5 / Godot 4.x)             │
+│        게임 런타임 하네스 코어 (Pygame / Tauri+HTML5 / Godot 4.x / Rust+Python Hybrid) │
 │                                                                                       │
-│  1. 결정론적 고정 틱과 렌더링 분리 (Fixed 60Hz: Pygame Dummy / Accumulator / Physics)│
+│  1. 결정론적 고정 틱과 렌더링 분리 (Fixed 60Hz: Pygame Dummy / Accumulator / Rust FFI) │
 │  2. 헤드리스 1만 틱 시뮬레이터 (Headless 10k-Tick Sim Rig: 승패/밸런스 0.1초 검증)    │
 │  3. 입력 버퍼링 & 안전망 (Input Buffering, Coyote Time, 전역 키 릴리즈 가드)          │
 │  4. 충돌 감사 & Reachability Solver (AABB, 서브스텝, 도달 불가능한 맵 사전 감지)       │
@@ -38,12 +41,14 @@ description: >-
 │  6. ⭐ 플레이어블 검수 관문 (Playable Review Gate: 배포 전 사용자 직접 플레이 피드백) │
 │  7. 세이브 데이터 원자적 안전망 (Atomic Save Rig: 전원 차단 시 0바이트 손상 방지)     │
 │  8. 다국어 & 상용 릴리즈 봉인 (Production Seal, i18n, Steam/Tauri/Godot 원클릭 배포) │
+│  9. 🎨 그래픽 실전 툴 나침반 (UI=벡터/SVG, 일러스트=SDXL, 도트=SD1.5, 효과=셰이더)   │
+│ 10. 🎵 무결점 오디오 런타임 하네스 (Audio Safety: 더미 폴백, WebAudio 가드, 3-Bus)   │
 └────────────────────────────────────────────────────────┬──────────────────────────────┘
                                                          │
          [검증 ALL PASS ➔ 사용자 플레이 검수 ➔ 상용 닥터 감사 ➔ 릴리즈 봉인]
 ```
 
-- **기둥 1: 고정 틱과 렌더링 분리**: Pygame Dummy 가드, Tauri Accumulator 루프, Godot `_physics_process` 분리.
+- **기둥 1: 고정 틱과 렌더링 분리**: Pygame Dummy 가드, Tauri Accumulator 루프, Godot `_physics_process`, Rust 코어 + Python FFI 이원화 분리.
 - **기둥 2: 헤드리스 1만 틱 시뮬레이터**: 렌더링 없이 1만 틱을 0.2초 만에 돌려 무한 루프, 메모리 안정성, 승패 검증.
 - **기둥 3: 입력 버퍼링 & 안전망**: 프레임 드랍 시 입력 씹힘 방지 및 게임 종료 시 물리 입력 100% 해제.
 - **기둥 4: 충돌 감사 & Reachability Solver**: 투사체 관통 방지 서브스텝 및 도달 불가능 발판(Unwinnable Map) 사전 감지.
@@ -54,21 +59,33 @@ description: >-
   - 임시 파일 쓰기 및 `os.replace` 원자적 교체로 충돌/정전 시 세이브 파일 깨짐(Corruption) 원천 방어.
 - **기둥 8: 다국어 & 상용 릴리즈 봉인 (Commercial Release Rig)**:
   - `locales/` 다국어 사전 탑재, 상용 빌드 시 `F1` 손맛 튜너 자동 봉인(`PRODUCTION_BUILD=True`), 원클릭 스팀/웹/데스크톱 배포.
+- **기둥 9: 🎨 그래픽 실전 툴 나침반 (Game Art Toolchain Compass)**:
+  - UI/프레임/뱃지는 **Figma / SVG 벡터**로 가볍고 깨짐 없게 구축 (2~10KB).
+  - 캐릭터/배경 원화는 **SDXL 1.0 + ComfyUI**로 가운데 일러스트에만 분리 투입.
+  - 2D 도트 스프라이트는 **SD 1.5 + Pixel LoRA ➡️ Aseprite**로 격자 통일.
+  - 회전/발광 이펙트는 **게임 엔진 2D 셰이더**로 0KB 동적 구현.
+- **기둥 10: 🎵 무결점 오디오 & 사운드 런타임 하네스 (Audio Safety & Sound Rig)**:
+  - 사운드카드 미연결/헤드리스 환경 크래시 방지(Pygame 더미 오디오 폴백).
+  - 웹 브라우저(Tauri/HTML5) 오토플레이 차단 해제(User Gesture Unlock Guard).
+  - 독립 3계층 볼륨 버스(Master / BGM / SFX) 및 부드러운 페이드 트랜지션.
+  - 동시 발음수(Voice Polyphony) 제어로 찢어지는 디스토션 음압 방어.
 
 ---
 
-## 2. 초자율 게임 에이전트 10대 실행 강령
+## 2. 초자율 게임 에이전트 12대 실행 강령
 
-1. **버전 독립성 준수**: 게임 프로토콜 버전(v1.3.0)과 대상 게임 고유 버전(`v0.1.0`)을 분리한다.
-2. **엔진 생태계 적응력**: Pygame, Tauri/HTML5, Godot 4.x 중 사용자가 요청한 스택의 표준 하네스를 즉각 구축한다.
+1. **버전 독립성 준수**: 게임 프로토콜 버전(v1.5.0)과 대상 게임 고유 버전(`v0.1.0`)을 분리한다.
+2. **엔진 생태계 적응력**: Pygame, Tauri/HTML5, Godot 4.x, Rust+Python Hybrid 중 사용자가 요청한 스택의 표준 하네스를 즉각 구축한다.
 3. **기술 결함은 무중단 자가 치유한다**: 충돌 버그, 맵 차단, 무한 루프는 사용자에게 묻지 않고 1만 틱 러너로 스스로 해결한다.
 4. **손맛과 재미는 반드시 사용자에게 검수받는다 (Playable Review Gate)**: 배포 전 로컬 실행 스크립트와 밸런스 수치 요약표를 사용자에게 제출하고 직접 플레이 검수를 요청한다.
 5. **세이브 데이터 원자성 절대 사수**: 세이브 루틴은 반드시 원자적 교체(`os.replace`) 패턴을 적용하여 데이터 유실을 0%로 만든다.
 6. **상용 빌드 디버그 봉인 의무화**: 배포 전 `PRODUCTION_BUILD` 플래그로 `[F1]` 튜너 및 치트를 봉인한다.
 7. **하드코딩 텍스트 금지 (i18n 준수)**: UI와 안내 메시지는 `locales/en.json`, `locales/ko.json` 딕셔너리로 분리한다.
-8. **제로-토큰 스캐폴더 즉각 활용**: `scripts/game_scaffolder.py`를 호출하여 뼈대 코드 생성 토큰 15,000개를 아낀다.
-9. **상용 릴리즈 닥터 전수 검사**: 최종 릴리즈 전 `scripts/game_release_doctor.py` 80점 이상 획득을 검증한다.
-10. **선제적 게임 맹점 보고**: 완료 시 `[🔭 게임 밸런스 및 상용화 확장 레이더]` 섹션을 의무 보고한다.
+8. **🎨 그래픽 종류별 실전 툴 나침반 준수**: UI=벡터/SVG, 원화=SDXL, 도트=SD1.5, 효과=셰이더로 최적 분업한다.
+9. **🎵 오디오 하네스 무결성 사수**: 무사운드 환경 크래시 방지 더미 폴백, 웹 오토플레이 해제 가드, 3-Bus 볼륨 분리를 적용한다.
+10. **사용자 표면 UX 카피 무결성 준수 (LJack Skill 연계)**: 인게임 UI 레이블 및 다국어 사전에 '하네스/자가치유/히트박스/서브스텝' 등 개발자 내부 은어 노출을 100% 차단한다.
+11. **제로-토큰 스캐폴더 즉각 활용**: `scripts/game_scaffolder.py`를 호출하여 뼈대 코드 생성 토큰 15,000개를 아낀다.
+12. **상용 릴리즈 닥터 전수 검사**: 최종 릴리즈 전 `scripts/game_release_doctor.py` 80점 이상 획득을 검증한다.
 
 ---
 
@@ -77,10 +94,10 @@ description: >-
 1. **손맛/조작감**: *"점프할 때 코요테 타임이나 선입력 버퍼링이 적용되어 1프레임 차이로 조작이 씹히는 답답함이 없는가?"*
 2. **세이브 안정성**: *"게임을 저장하는 찰나에 강제 종료(Alt+F4)되거나 컴퓨터가 꺼져도 이전 세이브가 손상되지 않는가?"*
 3. **상용 릴리즈 봉인**: *"일반 유저에게 배포될 빌드에서 [F1] 손맛 튜너나 디버그 콘솔이 안전하게 비활성화(봉인)되어 있는가?"*
-4. **다국어 현지화**: *"코드 내에 하드코딩된 한글/영어 문자열이 없으며, locales/ 사전으로 글로벌 유저를 지원할 수 있는가?"*
-5. **도달 가능성(Reachability)**: *"맵의 모든 플랫폼이 현재 플레이어의 점프력으로 수학적으로 100% 도달 가능한가?"*
-6. **플레이어블 검수 상태**: *"사용자가 지금 바로 로컬 명령어로 플레이해보고 [F1]으로 손맛을 튜닝할 수 있는가?"*
-7. **배포 청결도**: *"상용 패키징 내에 임시 테스트 로그나 찌꺼기 파일이 단 1개도 남아있지 않은가?"*
+4. **오디오 안정성**: *"사운드 카드가 없거나 브라우저 오토플레이 차단 환경에서도 게임이 튕기거나 먹통 되지 않고 정상 작동하는가?"*
+5. **다국어 및 UX 카피**: *"UI에 하드코딩된 문자열이 없으며, 인게임 텍스트나 번역 사전에 개발자 은어(하네스, 히트박스, 틱)가 섞여있지 않은가?"*
+6. **도달 가능성(Reachability)**: *"맵의 모든 플랫폼이 현재 플레이어의 점프력으로 수학적으로 100% 도달 가능한가?"*
+7. **플레이어블 검수 상태**: *"사용자가 지금 바로 로컬 명령어로 플레이해보고 [F1]으로 손맛을 튜닝할 수 있는가?"*
 
 ---
 
@@ -88,13 +105,13 @@ description: >-
 
 ```text
 [1단계: 게임 기획 승인 & 제로-토큰 멀티엔진 스캐폴딩]
-  - 엔진 스택 결정 ➔ scripts/game_scaffolder.py 호출 (세이브 매니저, 다국어 기본 탑재, 토큰 15,000개 절약)
+  - 엔진 스택 결정 ➔ scripts/game_scaffolder.py 호출 (세이브 매니저, 다국어, 오디오 하네스 탑재, 토큰 15,000개 절약)
        ↓
 [2단계: 헤드리스 1만 틱 시뮬레이터 & 충돌/Reachability 하네스 구축]
   - 메모리 상에서 0.2초 만에 물리/상태 전이와 발판 도달 가능성을 검증하는 10k-Tick 러너 구축
        ↓
-[3단계: 게임 메카닉, 입력 버퍼 및 렌더링/손맛 구현]
-  - Fixed 60Hz 루프, 코요테 타임, 점프 선입력, F1 실시간 튜너 오버레이 탑재
+[3단계: 게임 메카닉, 입력 버퍼 및 렌더링/손맛/오디오 구현]
+  - Fixed 60Hz 루프, 코요테 타임, 점프 선입력, F1 실시간 튜너 오버레이, 3-Bus 볼륨 탑재
        ↓
 [4단계: 무중단 헤드리스 자가 치유 루프]
   - scripts/tick_sim_runner.py 가동 ➔ 1만 틱 시뮬레이션 ALL PASS (터널링 0건, 맵 도달불가 0건)
@@ -113,14 +130,18 @@ description: >-
 ## 5. 내장 자동화 도구 및 참조 레퍼런스
 
 ### 🛠️ 내장 스크립트 도구 (`scripts/`)
-- `scripts/game_scaffolder.py`: Pygame, Tauri, Godot 8대 기둥 골격 및 세이브/다국어 0초 생성 (**토큰 15,000개 절감**).
-- `scripts/game_release_doctor.py`: 상용 출시 준비도(0~100) 및 스팀/스토브 승인 게이트 정적 진단 닥터.
-- `scripts/localization_linter.py`: 다국어(i18n) 번역 테이블 무결성 검증 및 하드코딩 텍스트 자동 추출기.
+- `scripts/vector_asset_builder.py`: 초경량 SVG 카드 프레임 및 뱃지 빌더 (comic 카툰풍 / metallic 메탈릭풍 지원).
+- `scripts/game_scaffolder.py`: Pygame, Tauri, Godot, Rust+Python Hybrid 10대 기둥 골격 0초 생성 (**토큰 15,000개 절감**).
+- `scripts/game_release_doctor.py`: 상용 출시 준비도(0~100), 오디오 안전망, UX 카피 무결성 및 스팀/스토브 승인 게이트 정적 진단 닥터.
+- `scripts/localization_linter.py`: 다국어(i18n) 번역 무결성 및 사전 내 개발자 은어(UX Copy) 동시 감사 도구.
 - `scripts/tick_sim_runner.py`: Reachability Solver 및 헤드리스 1만 틱 초고속 시뮬레이터.
 - `scripts/play_preview_launcher.py`: 엔진 자동 감지 기반 플레이 검수 브리핑 도구.
 - `scripts/web_packager.py`: WebAssembly(HTML5) 브라우저 원클릭 웹 패키저.
 
 ### 📚 심화 참조 레퍼런스 (`references/`)
+- [Rust 코어 + Python 인터페이스 이원화 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/rust_hybrid_game_guide.md): 🦀 **[NEW]** Rust 60Hz 결정론적 시뮬레이션 & Pygame ctypes C-ABI 연동.
+- [오디오 & 사운드 런타임 하네스 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/audio_runtime_harness_guide.md): 무음 디바이스 크래시 방지, WebAudio 제스처 가드, 3-Bus 볼륨 공식.
+- [게임 그래픽 종류별 실전 툴 나침반 & 구축 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/game_graphics_toolchain_guide.md): 상황별 툴 선정(UI=Figma/SVG, 원화=SDXL, 도트=SD1.5, 효과=셰이더) 및 실전 구축법.
 - [스팀(Steam) 상용 출시 및 스팀웍스 연동 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/steam_publishing_guide.md): 원자적 세이브, Steamworks SDK, 스팀덱 최적화.
 - [Tauri + HTML5/Canvas 게임 하네스 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/tauri_html5_guide.md): Accumulator 고정 틱, Node 헤드리스 테스트, Tauri 배포.
 - [고도 엔진 (Godot 4.x) 게임 하네스 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-game/references/godot_engine_guide.md): _physics_process 분리, `--headless` 1만 틱, CanvasLayer F1 튜너.
@@ -134,8 +155,13 @@ description: >-
 - **v1.0.0**: 게임 런타임 하네스 8대 기둥, 헤드리스 1만 틱 러너, 플레이어블 검수 관문(Playable Review Gate).
 - **v1.1.0**: 인게임 실시간 손맛 튜너 (F1/F2 오버레이), Pygame 더미 가드, Reachability Solver(도달 불가 맵 방지), WebAssembly 패키저.
 - **v1.2.0**: 멀티 엔진 생태계 전격 지원 (Pygame, Tauri/HTML5, Godot 4.x), 엔진 자동 감지 검수기.
-- **v1.3.0 (Current - Commercial Edition)**:
-  - **원자적 세이브 안전망 (Atomic Save Rig)**: 정전/강제종료 시 세이브 깨짐 0% 보장.
-  - **상용 릴리즈 닥터 (`game_release_doctor.py`)**: 상용 품질(0~100) 및 스팀 출시 게이트 정적 진단.
-  - **다국어(i18n) 현지화 린터 (`localization_linter.py`)**: 글로벌 스팀 출시를 위한 다국어 무결성 가드.
-  - **스팀 상용 출시 레퍼런스 (`steam_publishing_guide.md`)**: Steamworks SDK 및 스팀덱 대응 공식 수록.
+- **v1.3.0**: 원자적 세이브 안전망 (Atomic Save Rig), 상용 릴리즈 닥터 (`game_release_doctor.py`), 다국어(i18n) 현지화 린터 (`localization_linter.py`), 스팀 상용 출시 레퍼런스 (`steam_publishing_guide.md`).
+- **v1.4.0 (Game Art & Toolchain Compass Edition)**:
+  - **기둥 9: 🎨 그래픽 실전 툴 나침반**: 포맷/해상도 집착 없이 "상황별 필요한 툴(Figma/SVG, SDXL, 도트, 셰이더)"을 직관적으로 선정하는 가이드라인 정립.
+  - **그래픽 툴 나침반 레퍼런스 (`game_graphics_toolchain_guide.md`)**: UI(Figma/SVG) ➡️ 일러스트(SDXL) ➡️ 스프라이트(SD1.5/Aseprite) ➡️ 셰이더(0KB) 분업 공식 수록.
+  - **초경량 벡터 에셋 빌더 (`vector_asset_builder.py`)**: TCG 카드 프레임 및 뱃지 SVG 자동 빌더 탑재.
+- **v1.5.0 (Current - Audio Safety & Cross-Protocol Linter Edition)**:
+  - **기둥 10: 🎵 무결점 오디오 런타임 하네스**: 무음 디바이스 더미 폴백, WebAudio 제스처 언락 가드, Master/BGM/SFX 3계층 버스 규격화.
+  - **오디오 런타임 하네스 레퍼런스 (`audio_runtime_harness_guide.md`)**: Pygame, Tauri/HTML5, Godot 4.x 오디오 하네스 공식 레시피 수록.
+  - **상용 릴리즈 닥터 고도화 (`game_release_doctor.py`)**: 오디오 안전망 및 UX Copy 무결성(100점 만점) 정밀 검사 탑재.
+  - **양대 프로토콜 린터 상호 연동**: `ux_copy_linter.py`의 게임 도메인/다국어 지원 및 `localization_linter.py`의 UX Copy 검사 통합.

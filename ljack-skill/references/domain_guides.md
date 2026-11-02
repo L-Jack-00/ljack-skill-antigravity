@@ -48,3 +48,24 @@
   - Windows 콘솔 출력 시 UTF-8 강제 설정(`sys.stdout.reconfigure(encoding='utf-8')`)으로 다국어/로그 깨짐 원천 방어.
 * **비상정지 인터록**:
   - 파이프라인 처리 도중 SIGINT(`Ctrl+C`) 수신 시 안전하게 중간 체크포인트를 저장하고 종료하는 인터록 구성.
+
+---
+
+### 5. Rust 코어 + Python 인터페이스 이원화 하네스 (Rust-Python Hybrid Rig)
+연산 집약적 로직, 상태 불변성, 고속 동시성은 **Rust 코어**로 구현하고, UI 렌더링, 이벤트 라우팅, 스크립팅은 **Python 인터페이스**로 분리하는 최상위 이원화 아키텍처입니다.
+
+* **코어와 입출력 완전 분리 (기둥 1 & 2의 극대화)**:
+  - Rust는 화면/OS/사용자 입력에 대한 의존성이 0인 순수 계산 엔진(`cdylib` / `pyo3`)으로 컴파일.
+  - Python(PyQt6, Pygame, NiceGUI, CLI)은 Rust 엔진이 반환한 불변 상태를 렌더링하고 사용자 입력을 이벤트 큐로 Rust에 전달하는 순수 I/O 계층으로 동작.
+* **2대 바인딩 구현 전략**:
+  1. **C-ABI `ctypes` 방식 (무의존성 Fast-Path)**:
+     - Rust에서 `#[repr(C)]` 구조체와 `#[no_mangle] pub extern "C"` 함수를 노출하여 `.dll` / `.so` 빌드.
+     - Python 환경에 C++ 컴파일러나 추가 패키지 설치 없이 표준 라이브러리 `ctypes`만으로 즉각 로드.
+  2. **`PyO3` + `maturin` 방식 (고성능 네이티브 바인딩)**:
+     - 복잡한 객체 그래프나 대용량 메모리 버퍼(`PyArray`, `PyBuffer`) 공유 시 Zero-Copy 바인딩.
+     - 장시간 연산 시 GIL 릴리즈(`py.allow_threads`)로 Python GUI 메인 스레드 프리징 원천 방어.
+* **FFI 경계 패닉 격리 (Panic Interlock)**:
+  - Rust 내부의 `panic!`이 FFI 경계를 넘어 Python 프로세스를 강제 종료(Crash)시키지 않도록 `std::panic::catch_unwind`를 적용하고 에러 코드를 반환.
+* **2단계 헤드리스 테스트 파이프라인**:
+  - 1단계: Rust 단독 로직 검증 (`cargo test --lib`) ➔ 메모리 상에서 0.05초 만에 10만 회 연산 검증.
+  - 2단계: Python 브릿지 통합 검증 (`python tests/test_headless.py`) ➔ FFI 데이터 직렬화 및 예외 처리 검증.

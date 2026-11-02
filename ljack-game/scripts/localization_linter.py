@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.3.0] Commercial Localization & i18n Linter
+[LJack Game Protocol v1.5.0] Commercial Localization & UX Copy Linter
 ====================================================================
 Scans game source code (Pygame, Tauri/JS, Godot GDScript) for hardcoded
-display text and ensures complete multi-language dictionary (i18n) compliance
-for commercial Steam publishing.
+display text, ensures multi-language dictionary (i18n) compliance,
+and audits translation dictionaries for internal developer/harness jargon
+in cooperation with LJack Protocol's UX Copy Gate.
 
 Usage:
-    python localization_linter.py <game_directory> [--extract]
+    python localization_linter.py <game_directory> [--extract] [--strict]
 """
 
 import os
@@ -25,6 +26,26 @@ if sys.stdout.encoding != 'utf-8':
 
 IGNORED_DIRS = {'.git', '__pycache__', 'node_modules', 'dist', 'dist_web', '.godot', '_internal'}
 SCANNABLE_EXTS = {'.py', '.js', '.ts', '.gd', '.html'}
+
+# Blacklisted developer/harness/AI internal jargon in game user UI
+GAME_PROHIBITED_TERMS = {
+    "하네스": "안전 가드, 안정화 도구, 또는 구체적 기능 명칭",
+    "harness": "safety guard, stability engine, or specific feature name",
+    "인터록": "안전 잠금, 오작동 방지, 자동 보호",
+    "interlock": "safety lock, protection guard",
+    "fsm": "작업 단계, 진행 상태, 게임 모드",
+    "자가 치유": "자동 복구, 오류 자동 수정, 안정화",
+    "self-healing": "auto-recovery, auto-repair, stabilization",
+    "ljack": "시스템, 핵심 엔진 (최종 사용자 UI 노출 금지)",
+    "히트박스": "타격 범위, 피격 영역, 경계선",
+    "hitbox": "attack range, hit area, boundary",
+    "서브스텝": "정밀 물리 계산",
+    "substep": "precise physics step",
+    "코요테 타임": "조작 보정 유예, 반응성 개선",
+    "coyote time": "jump forgiveness, response buffer",
+    "치트": "보조 옵션, 편의 기능 (상용 릴리즈 봉인)",
+    "시뮬레이터": "연습장, 시뮬레이션 모드, 샌드박스",
+}
 
 # Regex patterns catching visible string literals in draw/render/text setters
 LITERAL_PATTERNS = [
@@ -89,6 +110,39 @@ def audit_localization(game_dir: str, do_extract: bool = False):
 
     if not has_locales or len(found_locales) < 2:
         print("[WARN] Commercial games on Steam require at least 2 languages (e.g. en.json and ko.json).")
+
+    # UX Copy Integrity Audit on Dictionary strings
+    ux_violations = []
+    if has_locales:
+        for f in os.listdir(locales_dir):
+            if f.endswith(".json"):
+                fpath = os.path.join(locales_dir, f)
+                try:
+                    with open(fpath, "r", encoding="utf-8", errors="ignore") as jfp:
+                        data = json.load(jfp)
+                    if isinstance(data, dict):
+                        for k, v in data.items():
+                            if isinstance(v, str):
+                                v_lower = v.lower()
+                                for term, sug in GAME_PROHIBITED_TERMS.items():
+                                    if term in v_lower:
+                                        ux_violations.append({
+                                            "file": f,
+                                            "key": k,
+                                            "term": term,
+                                            "text": v,
+                                            "suggestion": sug
+                                        })
+                except Exception:
+                    pass
+
+    if ux_violations:
+        print(f"\n[FAIL] Found {len(ux_violations)} UX Copy violation(s) in translation dictionaries:")
+        for uv in ux_violations:
+            print(f"  - {uv['file']} [{uv['key']}] -> \"{uv['text']}\" (Prohibited: '{uv['term']}' -> Suggest: '{uv['suggestion']}')")
+    else:
+        if has_locales:
+            print("[PASS] UX Copy Gate: 0 developer jargon violations in translation files.")
 
     if hardcoded_strings:
         print("\n[DETECTED HARDCODED TEXT (Sample)]:")

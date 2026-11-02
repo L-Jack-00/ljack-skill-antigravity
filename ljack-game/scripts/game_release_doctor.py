@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.3.0] Commercial Game Release Doctor & Health Auditor
+[LJack Game Protocol v1.5.0] Commercial Game Release Doctor & Health Auditor
 ============================================================================
 Performs exhaustive AST & static inspection of the game project against
 Steam/Commercial Store release standards:
   1. Atomic Save Data & Crash-proof persistence
   2. Production Debug Seal (F1 Live Tuner disabled in release)
   3. Display & Resolution Adaptability (Fullscreen, Aspect Ratio)
-  4. Audio Voice Limiting & Volume Channels
-  5. Multi-language Localization (i18n)
-  6. Artifact cleanliness (Zero transient test logs)
+  4. Audio Safety & Polyphony Rig (Dummy fallback, 3-bus volume, gesture guard)
+  5. Multi-language Localization (i18n >= 2 languages)
+  6. UX Copy Gate Integrity (Zero developer/harness jargon in player UI)
+  7. Artifact cleanliness (Zero transient test logs)
 
 Usage:
     python game_release_doctor.py <game_directory> [--strict]
@@ -19,6 +20,8 @@ Usage:
 import os
 import sys
 import fnmatch
+import json
+import re
 import argparse
 
 if sys.stdout.encoding != 'utf-8':
@@ -28,7 +31,12 @@ if sys.stdout.encoding != 'utf-8':
         pass
 
 IGNORED_DIRS = {'.git', '__pycache__', 'node_modules', 'dist', 'dist_web', '.godot', '_internal'}
-SCANNABLE_EXTS = {'.py', '.js', '.ts', '.gd', '.json', '.html'}
+SCANNABLE_EXTS = {'.py', '.js', '.ts', '.gd', '.json', '.html', '.rs'}
+
+PROHIBITED_UX_TERMS = {
+    "하네스", "harness", "인터록", "interlock", "fsm", "자가 치유", "self-healing",
+    "ljack", "히트박스", "hitbox", "서브스텝", "substep", "코요테 타임", "coyote time"
+}
 
 class GameReleaseDoctor:
     def __init__(self, target_dir: str, strict: bool = False):
@@ -40,15 +48,34 @@ class GameReleaseDoctor:
         self.has_production_seal = False
         self.has_fullscreen_toggle = False
         self.has_audio_mixer = False
+        self.has_audio_safety_guard = False
         self.has_localization = False
+        self.ux_copy_violations = []
         self.junk_files = []
         self.total_source_files = 0
 
     def inspect_workspace(self):
-        # 1. Check locales directory
+        # 1. Check locales directory & audit dictionary UX copy
         locales_dir = os.path.join(self.target_dir, "locales")
-        if os.path.isdir(locales_dir) and len(os.listdir(locales_dir)) >= 2:
-            self.has_localization = True
+        if os.path.isdir(locales_dir):
+            loc_files = [f for f in os.listdir(locales_dir) if f.endswith((".json", ".cfg", ".po"))]
+            if len(loc_files) >= 2:
+                self.has_localization = True
+
+            for lf in loc_files:
+                if lf.endswith(".json"):
+                    try:
+                        with open(os.path.join(locales_dir, lf), "r", encoding="utf-8", errors="ignore") as jfp:
+                            data = json.load(jfp)
+                        if isinstance(data, dict):
+                            for k, v in data.items():
+                                if isinstance(v, str):
+                                    v_low = v.lower()
+                                    for term in PROHIBITED_UX_TERMS:
+                                        if term in v_low:
+                                            self.ux_copy_violations.append(f"locales/{lf} [{k}] contains '{term}'")
+                    except Exception:
+                        pass
 
         for root, dirs, files in os.walk(self.target_dir):
             dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
@@ -81,8 +108,22 @@ class GameReleaseDoctor:
                             self.has_fullscreen_toggle = True
 
                         # Check Audio Mixer / Volume control
-                        if any(term in content for term in ["mixer", "volume", "sound", "AudioServer", "set_volume"]):
+                        if any(term in content for term in ["mixer", "volume", "sound", "AudioServer", "AudioContext"]):
                             self.has_audio_mixer = True
+
+                        # Check Audio Fallback / Safety Guard
+                        if any(term in content for term in ["SDL_AUDIODRIVER", "dummy", "resume()", "linear_to_db", "set_num_channels", "fadeout"]):
+                            self.has_audio_safety_guard = True
+
+                        # Fast UX check in UI setter strings (skip meta docs)
+                        if not any(k in fpath.lower() for k in ["skill.md", "reference", "script", "readme.md"]):
+                            for line in content.splitlines():
+                                line_s = line.strip()
+                                if any(fn in line_s for fn in ["draw_text", "fillText", "setText", "setWindowTitle", "render("]):
+                                    line_low = line_s.lower()
+                                    for term in PROHIBITED_UX_TERMS:
+                                        if term in line_low:
+                                            self.ux_copy_violations.append(f"{os.path.basename(fpath)}: contains '{term}'")
 
                     except Exception:
                         pass
@@ -107,39 +148,51 @@ class GameReleaseDoctor:
             checks.append(("[WARN]", "Pillar 7: Missing Atomic Save Rig (Risk of save file corruption on crash) (+0)"))
             action_items.append("Wrap save routine with os.replace() and temporary write to prevent save corruption.")
 
-        # 2. Production Debug Seal (20 pts)
+        # 2. Production Debug Seal (15 pts)
         if self.has_production_seal:
-            score += 20
-            checks.append(("[PASS]", "Pillar 5 & 8: Production Debug Seal (F1 Tuner sealed for commercial build) (+20)"))
+            score += 15
+            checks.append(("[PASS]", "Pillar 5 & 8: Production Debug Seal (F1 Tuner sealed for commercial build) (+15)"))
         else:
             checks.append(("[WARN]", "Pillar 5 & 8: No PRODUCTION_BUILD flag found (F1 Tuner may be exposed to players) (+0)"))
             action_items.append("Add PRODUCTION_BUILD boolean flag to disable [F1] Tuner overlay in commercial releases.")
 
-        # 3. Display & Resolution Adaptability (15 pts)
+        # 3. Display & Resolution Adaptability (10 pts)
         if self.has_fullscreen_toggle:
-            score += 15
-            checks.append(("[PASS]", "Display: Fullscreen / Resolution adaptability supported (+15)"))
+            score += 10
+            checks.append(("[PASS]", "Display: Fullscreen / Resolution adaptability supported (+10)"))
         else:
             checks.append(("[WARN]", "Display: Missing Fullscreen / Windowed toggle option (+0)"))
             action_items.append("Add Fullscreen toggle (e.g. Alt+Enter or F11) for Steam Deck / Wide display compliance.")
 
-        # 4. Audio Mixer & Polyphony Safety (15 pts)
-        if self.has_audio_mixer:
+        # 4. Pillar 10: Audio Safety & Polyphony Rig (15 pts)
+        if self.has_audio_mixer and self.has_audio_safety_guard:
             score += 15
-            checks.append(("[PASS]", "Audio: Audio mixer / volume channels detected (+15)"))
+            checks.append(("[PASS]", "Pillar 10: Audio Safety & Polyphony Rig (Mixer + Dummy/Safety Guard active) (+15)"))
+        elif self.has_audio_mixer:
+            score += 8
+            checks.append(("[WARN]", "Pillar 10: Audio mixer found but missing headless dummy fallback / gesture guard (+8)"))
+            action_items.append("Refer to references/audio_runtime_harness_guide.md to add dummy audio fallback or resume guards.")
         else:
-            checks.append(("[WARN]", "Audio: No audio mixer or master/BGM/SFX volume control found (+0)"))
-            action_items.append("Implement independent volume channels (Master/BGM/SFX) to avoid audio clipping.")
+            checks.append(("[WARN]", "Pillar 10: No audio mixer or master/BGM/SFX volume control found (+0)"))
+            action_items.append("Implement independent volume channels (Master/BGM/SFX) and dummy driver fallback.")
 
         # 5. Commercial Localization i18n (15 pts)
         if self.has_localization:
             score += 15
-            checks.append(("[PASS]", "i18n: Multi-language support (locales/ with >= 2 languages) verified (+15)"))
+            checks.append(("[PASS]", "Pillar 8: Commercial Localization (locales/ with >= 2 languages) verified (+15)"))
         else:
-            checks.append(("[WARN]", "i18n: Missing locales/ directory or multi-language dictionaries (+0)"))
+            checks.append(("[WARN]", "Pillar 8: Missing locales/ directory or multi-language dictionaries (+0)"))
             action_items.append("Run python scripts/localization_linter.py --extract to generate locales/en.json and ko.json.")
 
-        # 6. Artifact Cleanliness (15 pts)
+        # 6. UX Copy Gate Integrity (10 pts)
+        if not self.ux_copy_violations:
+            score += 10
+            checks.append(("[PASS]", "UX Copy Gate: 0 developer/harness jargon violations in player UI (+10)"))
+        else:
+            checks.append(("[WARN]", f"UX Copy Gate: Found {len(self.ux_copy_violations)} developer jargon term(s) in player UI (+0)"))
+            action_items.append("Run python scripts/localization_linter.py to sanitize developer jargon from player UI strings.")
+
+        # 7. Artifact Cleanliness (15 pts)
         if not self.junk_files:
             score += 15
             checks.append(("[PASS]", "Pillar 8: Clean Release Artifacts (0 test logs / temporary dumps) (+15)"))

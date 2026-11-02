@@ -10,7 +10,7 @@ UTF-8 Guard, and Headless Test Runner) in 0 seconds.
 Eliminates 8,000 ~ 15,000 LLM output generation tokens per project.
 
 Usage:
-    python harness_scaffolder.py <target_dir> [--type cli|desktop|api] [--name ProjectName]
+    python harness_scaffolder.py <target_dir> [--type cli|desktop|api|rust_hybrid] [--name ProjectName]
 """
 
 import os
@@ -304,6 +304,227 @@ python run_app.py
 '''
 
 
+TEMPLATE_RUST_CARGO_TOML = '''[package]
+name = "{crate_name}"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+'''
+
+TEMPLATE_RUST_LIB_RS = '''// rust_core/src/lib.rs
+// LJack Protocol: Pure Deterministic Core Engine in Rust (C-ABI FFI)
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FsmState {
+    Idle = 0,
+    Running = 1,
+    Paused = 2,
+    Completed = 3,
+    Error = 4,
+}
+
+#[repr(C)]
+pub struct CoreState {
+    pub state: FsmState,
+    pub tick_count: u64,
+    pub progress_pct: f32,
+    pub payload_result: i64,
+}
+
+#[no_mangle]
+pub extern "C" fn core_create() -> *mut CoreState {
+    let boxed = Box::new(CoreState {
+        state: FsmState::Idle,
+        tick_count: 0,
+        progress_pct: 0.0,
+        payload_result: 0,
+    });
+    Box::into_raw(boxed)
+}
+
+#[no_mangle]
+pub extern "C" fn core_destroy(ptr: *mut CoreState) {
+    if !ptr.is_null() {
+        unsafe { drop(Box::from_raw(ptr)) };
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn core_step_tick(ptr: *mut CoreState, total_steps: u64) -> bool {
+    if ptr.is_null() { return false; }
+    let s = unsafe { &mut *ptr };
+    if s.state == FsmState::Paused { return true; }
+
+    s.state = FsmState::Running;
+    s.tick_count += 1;
+    s.payload_result += (s.tick_count as i64) * 2;
+    s.progress_pct = ((s.tick_count as f32) / (total_steps as f32) * 100.0).min(100.0);
+
+    if s.tick_count >= total_steps {
+        s.state = FsmState::Completed;
+    }
+    true
+}
+
+#[no_mangle]
+pub extern "C" fn core_set_pause(ptr: *mut CoreState, pause: bool) {
+    if ptr.is_null() { return; }
+    let s = unsafe { &mut *ptr };
+    s.state = if pause { FsmState::Paused } else { FsmState::Running };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rust_core_headless_10k_ticks() {
+        let ptr = core_create();
+        for _ in 0..10_000 {
+            core_step_tick(ptr, 10_000);
+        }
+        let s = unsafe { &*ptr };
+        assert_eq!(s.tick_count, 10_000);
+        assert_eq!(s.state, FsmState::Completed);
+        core_destroy(ptr);
+    }
+}
+'''
+
+TEMPLATE_RUST_BRIDGE_PY = '''# -*- coding: utf-8 -*-
+"""
+Rust Core C-ABI FFI Bridge (Pillar 1: Decoupled Native Core)
+Loads compiled Rust cdylib (.dll / .so / .dylib) with zero external python dependencies.
+Includes pure python mock fallback for headless testing without cargo.
+"""
+import os
+import sys
+import ctypes
+from enum import IntEnum
+from typing import Optional, Dict, Any
+
+class FsmState(IntEnum):
+    IDLE = 0
+    RUNNING = 1
+    PAUSED = 2
+    COMPLETED = 3
+    ERROR = 4
+
+class CoreStateStruct(ctypes.Structure):
+    _fields_ = [
+        ("state", ctypes.c_int),
+        ("tick_count", ctypes.c_uint64),
+        ("progress_pct", ctypes.c_float),
+        ("payload_result", ctypes.c_int64),
+    ]
+
+class RustCoreBridge:
+    def __init__(self, dll_path: Optional[str] = None):
+        self._lib = None
+        self._ptr = None
+        self.mock_mode = False
+
+        candidates = []
+        if dll_path:
+            candidates.append(dll_path)
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "rust_core", "target"))
+        candidates.extend([
+            os.path.join(base_dir, "release", "rust_core.dll"),
+            os.path.join(base_dir, "debug", "rust_core.dll"),
+            os.path.join(base_dir, "release", "librust_core.so"),
+            os.path.join(base_dir, "release", "librust_core.dylib"),
+        ])
+
+        for cand in candidates:
+            if os.path.exists(cand):
+                try:
+                    self._lib = ctypes.CDLL(cand)
+                    break
+                except Exception:
+                    pass
+
+        if self._lib:
+            self._setup_ffi()
+            self._ptr = self._lib.core_create()
+        else:
+            self.mock_mode = True
+            self._mock_tick = 0
+            self._mock_state = FsmState.IDLE
+            self._mock_result = 0
+
+    def _setup_ffi(self):
+        self._lib.core_create.restype = ctypes.POINTER(CoreStateStruct)
+        self._lib.core_destroy.argtypes = [ctypes.POINTER(CoreStateStruct)]
+        self._lib.core_step_tick.argtypes = [ctypes.POINTER(CoreStateStruct), ctypes.c_uint64]
+        self._lib.core_step_tick.restype = ctypes.c_bool
+        self._lib.core_set_pause.argtypes = [ctypes.POINTER(CoreStateStruct), ctypes.c_bool]
+
+    def step_tick(self, total_steps: int = 100) -> Dict[str, Any]:
+        if self.mock_mode:
+            if self._mock_state == FsmState.PAUSED:
+                pct = min(100.0, (self._mock_tick / max(total_steps, 1)) * 100.0)
+                return {"state": self._mock_state, "tick_count": self._mock_tick, "progress_pct": pct, "result": self._mock_result}
+            self._mock_tick += 1
+            self._mock_result += self._mock_tick * 2
+            pct = min(100.0, (self._mock_tick / max(total_steps, 1)) * 100.0)
+            self._mock_state = FsmState.COMPLETED if self._mock_tick >= total_steps else FsmState.RUNNING
+            return {"state": self._mock_state, "tick_count": self._mock_tick, "progress_pct": pct, "result": self._mock_result}
+
+        self._lib.core_step_tick(self._ptr, total_steps)
+        s = self._ptr.contents
+        return {
+            "state": FsmState(s.state),
+            "tick_count": s.tick_count,
+            "progress_pct": round(s.progress_pct, 2),
+            "result": s.payload_result,
+        }
+
+    def set_pause(self, paused: bool):
+        if self.mock_mode:
+            self._mock_state = FsmState.PAUSED if paused else FsmState.RUNNING
+        else:
+            self._lib.core_set_pause(self._ptr, paused)
+
+    def close(self):
+        if self._lib and self._ptr:
+            self._lib.core_destroy(self._ptr)
+            self._ptr = None
+
+    def __del__(self):
+        self.close()
+'''
+
+TEMPLATE_RUST_HYBRID_README = '''# {project_name} (Rust Core + Python Interface)
+
+Built with **LJack Protocol (v7.4.0)** Rust-Python Hybrid Runtime Harness.
+
+## 🏛️ Architecture (Decoupled Core & Interface)
+- `rust_core/`: Pure, deterministic computation engine in Rust (`cdylib` C-ABI, 0 I/O dependencies).
+- `src/core/`: Python FFI bridge (`rust_bridge.py`) using native `ctypes` with mock fallback.
+- `src/harness/`: Python supervisor loop, zero-load pause, emergency stops.
+- `tests/`: Headless verification suite.
+
+## 🔨 Build Rust Core (Optional for Release)
+```bash
+cd rust_core
+cargo build --release
+```
+
+## 🚀 Headless Self-Test Runner
+```bash
+python tests/test_headless.py
+```
+
+## 🏃 Run Application Interface
+```bash
+python run_app.py
+```
+'''
 def scaffold_project(target_dir: str, project_type: str = "cli", project_name: str = "AppCore"):
     print("=" * 65)
     print(" [LJack Protocol] Zero-Token Runtime Harness Scaffolder")
@@ -312,21 +533,96 @@ def scaffold_project(target_dir: str, project_type: str = "cli", project_name: s
     print(f"[*] Architecture Type: {project_type.upper()}")
     print(f"[*] Project Name    : {project_name}")
 
-    os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
-    os.makedirs(os.path.join(target_dir, "src", "harness"), exist_ok=True)
-    os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+    if project_type == "rust_hybrid":
+        crate_name = project_name.lower().replace("-", "_") + "_core"
+        os.makedirs(os.path.join(target_dir, "rust_core", "src"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "src", "harness"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
 
-    files_to_write = {
-        os.path.join(target_dir, "src", "__init__.py"): "",
-        os.path.join(target_dir, "src", "core", "__init__.py"): "",
-        os.path.join(target_dir, "src", "core", "models.py"): TEMPLATE_CLI_CORE_MODELS,
-        os.path.join(target_dir, "src", "core", "engine.py"): TEMPLATE_CLI_CORE_ENGINE,
-        os.path.join(target_dir, "src", "harness", "__init__.py"): "",
-        os.path.join(target_dir, "src", "harness", "supervisor.py"): TEMPLATE_CLI_HARNESS_SUPERVISOR,
-        os.path.join(target_dir, "tests", "test_headless.py"): TEMPLATE_TEST_HEADLESS,
-        os.path.join(target_dir, "run_app.py"): TEMPLATE_MAIN_CLI,
-        os.path.join(target_dir, "README.md"): TEMPLATE_README.format(project_name=project_name),
-    }
+        files_to_write = {
+            os.path.join(target_dir, "rust_core", "Cargo.toml"): TEMPLATE_RUST_CARGO_TOML.format(crate_name=crate_name),
+            os.path.join(target_dir, "rust_core", "src", "lib.rs"): TEMPLATE_RUST_LIB_RS,
+            os.path.join(target_dir, "src", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "rust_bridge.py"): TEMPLATE_RUST_BRIDGE_PY,
+            os.path.join(target_dir, "src", "harness", "__init__.py"): "",
+            os.path.join(target_dir, "src", "harness", "supervisor.py"): '''# -*- coding: utf-8 -*-
+import sys, time
+from ..core.rust_bridge import RustCoreBridge, FsmState
+
+class RustHybridSupervisor:
+    def __init__(self, bridge: RustCoreBridge = None):
+        self.bridge = bridge or RustCoreBridge()
+
+    def run_job(self, total_steps: int = 10, step_delay: float = 0.02):
+        print(f"[*] Supervisor running via Rust Core (Mock Mode: {self.bridge.mock_mode})...")
+        for _ in range(total_steps):
+            res = self.bridge.step_tick(total_steps)
+            if step_delay > 0: time.sleep(step_delay)
+            if res["state"] == FsmState.COMPLETED:
+                break
+        return self.bridge.step_tick(total_steps)
+''',
+            os.path.join(target_dir, "tests", "test_headless.py"): '''# -*- coding: utf-8 -*-
+import sys, os, unittest
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from src.core.rust_bridge import RustCoreBridge, FsmState
+from src.harness.supervisor import RustHybridSupervisor
+
+class TestRustHybridHeadless(unittest.TestCase):
+    def test_01_bridge_ticks(self):
+        bridge = RustCoreBridge()
+        res = bridge.step_tick(total_steps=50)
+        self.assertIn(res["state"], [FsmState.RUNNING, FsmState.COMPLETED])
+        bridge.close()
+
+    def test_02_supervisor_execution(self):
+        supervisor = RustHybridSupervisor()
+        final_res = supervisor.run_job(total_steps=10, step_delay=0.0)
+        self.assertEqual(final_res["state"], FsmState.COMPLETED)
+        supervisor.bridge.close()
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+''',
+            os.path.join(target_dir, "run_app.py"): '''# -*- coding: utf-8 -*-
+import sys, os
+from src.core.rust_bridge import RustCoreBridge
+from src.harness.supervisor import RustHybridSupervisor
+
+def main():
+    print("=" * 60)
+    print(" [LJack Application] Rust Core + Python Interface Hybrid")
+    print("=" * 60)
+    bridge = RustCoreBridge()
+    supervisor = RustHybridSupervisor(bridge)
+    res = supervisor.run_job(total_steps=20, step_delay=0.05)
+    print(f"[PASS] Finished. Ticks: {res['tick_count']}, Result: {res['result']}")
+    bridge.close()
+
+if __name__ == "__main__":
+    main()
+''',
+            os.path.join(target_dir, "README.md"): TEMPLATE_RUST_HYBRID_README.format(project_name=project_name),
+        }
+
+    else:
+        os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "src", "harness"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+
+        files_to_write = {
+            os.path.join(target_dir, "src", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "models.py"): TEMPLATE_CLI_CORE_MODELS,
+            os.path.join(target_dir, "src", "core", "engine.py"): TEMPLATE_CLI_CORE_ENGINE,
+            os.path.join(target_dir, "src", "harness", "__init__.py"): "",
+            os.path.join(target_dir, "src", "harness", "supervisor.py"): TEMPLATE_CLI_HARNESS_SUPERVISOR,
+            os.path.join(target_dir, "tests", "test_headless.py"): TEMPLATE_TEST_HEADLESS,
+            os.path.join(target_dir, "run_app.py"): TEMPLATE_MAIN_CLI,
+            os.path.join(target_dir, "README.md"): TEMPLATE_README.format(project_name=project_name),
+        }
 
     created_count = 0
     for path, content in files_to_write.items():
@@ -349,7 +645,7 @@ def scaffold_project(target_dir: str, project_type: str = "cli", project_name: s
 def main():
     parser = argparse.ArgumentParser(description="LJack Protocol Zero-Token Harness Scaffolder")
     parser.add_argument("target_dir", nargs="?", default=".", help="Target directory to scaffold into")
-    parser.add_argument("--type", choices=["cli", "desktop", "api"], default="cli", help="Architecture template type")
+    parser.add_argument("--type", choices=["cli", "desktop", "api", "rust_hybrid"], default="cli", help="Architecture template type")
     parser.add_argument("--name", default="AppCore", help="Name of the application/module")
     args = parser.parse_args()
 

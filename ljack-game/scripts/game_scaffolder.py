@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.3.0] Multi-Engine Zero-Token Game Scaffolder
+[LJack Game Protocol v1.5.0] Multi-Engine Zero-Token Game Scaffolder
 ====================================================================
 Instantly generates complete, production-grade Game Harness scaffolding
-across 3 major engine ecosystems:
-  1. Pygame (Python 2D / 2.5D with F1 Live Tuner & Dummy Headless Guard)
-  2. Tauri + HTML5 (Canvas / WebGL with Accumulator Loop & Node Headless Runner)
-  3. Godot Engine 4.x (GDScript with Headless 10k-Tick Rig & CanvasLayer F1 Tuner)
+across 4 major engine ecosystems:
+  1. Pygame (Python 2D / 2.5D with F1 Live Tuner, Audio Safety & Dummy Headless Guard)
+  2. Tauri + HTML5 (Canvas / WebGL with Accumulator Loop, WebAudio Gesture Guard & Node Headless Runner)
+  3. Godot Engine 4.x (GDScript with Headless 10k-Tick Rig, AudioServer Bus & CanvasLayer F1 Tuner)
+  4. Rust + Python Hybrid (High-Speed Rust Core Simulation + Python Pygame Display & Audio Rig)
 
 Saves ~15,000 LLM output generation tokens per project.
 
 Usage:
-    python game_scaffolder.py <target_dir> --type pygame|tauri|godot|text [--title "MyGame"]
+    python game_scaffolder.py <target_dir> --type pygame|tauri|godot|rust_pygame|text [--title "MyGame"]
 """
 
 import os
@@ -178,6 +179,48 @@ class TestGameHeadlessSim(unittest.TestCase):
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGameHeadlessSim)
     sys.exit(0 if unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful() else 1)
+'''
+
+TEMPLATE_PYGAME_AUDIO = '''# -*- coding: utf-8 -*-
+"""
+Audio Safety & Sound Runtime Harness (Pygame Dummy Fallback + 3-Bus Volume)
+"""
+import os
+import pygame
+
+class AudioHarness:
+    def __init__(self):
+        self.audio_available = False
+        self.master_vol = 1.0
+        self.bgm_vol = 0.8
+        self.sfx_vol = 1.0
+        self.sfx_cooldowns = {}
+        try:
+            pygame.mixer.pre_init(44100, -16, 2, 512)
+            pygame.mixer.init()
+            pygame.mixer.set_num_channels(16)
+            self.audio_available = True
+        except pygame.error:
+            os.environ["SDL_AUDIODRIVER"] = "dummy"
+            self.audio_available = False
+
+    def set_volume(self, master=1.0, bgm=0.8, sfx=1.0):
+        self.master_vol = max(0.0, min(1.0, master))
+        self.bgm_vol = max(0.0, min(1.0, bgm))
+        self.sfx_vol = max(0.0, min(1.0, sfx))
+        if self.audio_available:
+            pygame.mixer.music.set_volume(self.master_vol * self.bgm_vol)
+
+    def play_bgm(self, file_path: str, loop: bool = True, fade_ms: int = 1000):
+        if not self.audio_available or not os.path.exists(file_path):
+            return
+        try:
+            pygame.mixer.music.fadeout(fade_ms)
+            pygame.mixer.music.load(file_path)
+            pygame.mixer.music.set_volume(self.master_vol * self.bgm_vol)
+            pygame.mixer.music.play(-1 if loop else 0, fade_ms=fade_ms)
+        except Exception:
+            pass
 '''
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -398,6 +441,68 @@ if (elapsed > 500) process.exit(1);
 process.exit(0);
 '''
 
+TEMPLATE_TAURI_AUDIO_JS = '''// src/core/audio.js
+/**
+ * WebAudio 3-Bus Harness with User Gesture Unlock & Tab Focus Mute
+ */
+export class WebAudioHarness {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.bgmGain = null;
+        this.sfxGain = null;
+        this.isUnlocked = false;
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            this.ctx = new AudioCtx();
+            this.masterGain = this.ctx.createGain();
+            this.bgmGain = this.ctx.createGain();
+            this.sfxGain = this.ctx.createGain();
+
+            this.bgmGain.connect(this.masterGain);
+            this.sfxGain.connect(this.masterGain);
+            this.masterGain.connect(this.ctx.destination);
+
+            this.masterGain.gain.value = 1.0;
+            this.bgmGain.gain.value = 0.8;
+            this.sfxGain.gain.value = 1.0;
+        }
+
+        this._attachGestureUnlock();
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && this.ctx && this.ctx.state === "running") {
+                this.ctx.suspend();
+            } else if (!document.hidden && this.ctx && this.isUnlocked && this.ctx.state === "suspended") {
+                this.ctx.resume();
+            }
+        });
+    }
+
+    _attachGestureUnlock() {
+        const unlock = () => {
+            if (this.ctx && this.ctx.state === "suspended") {
+                this.ctx.resume().then(() => { this.isUnlocked = true; });
+            } else {
+                this.isUnlocked = true;
+            }
+            window.removeEventListener("pointerdown", unlock);
+            window.removeEventListener("keydown", unlock);
+        };
+        window.addEventListener("pointerdown", unlock, { once: true });
+        window.addEventListener("keydown", unlock, { once: true });
+    }
+
+    setVolume(master = 1.0, bgm = 0.8, sfx = 1.0) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.linearRampToValueAtTime(master, now + 0.02);
+        this.bgmGain.gain.linearRampToValueAtTime(bgm, now + 0.02);
+        this.sfxGain.gain.linearRampToValueAtTime(sfx, now + 0.02);
+    }
+}
+'''
+
 # ═══════════════════════════════════════════════════════════════════════════
 # 3. GODOT ENGINE 4.x TEMPLATES
 # ═══════════════════════════════════════════════════════════════════════════
@@ -540,10 +645,243 @@ func _init():
     quit(0 if elapsed < 500 else 1)
 '''
 
+TEMPLATE_GODOT_AUDIO_GD = '''# scripts/core/audio_harness.gd
+class_name AudioHarness extends RefCounted
+
+const BUS_MASTER = 0
+const BUS_BGM = 1
+const BUS_SFX = 2
+
+static func set_master_volume(linear: float) -> void:
+    AudioServer.set_bus_volume_db(BUS_MASTER, linear_to_db(clampf(linear, 0.0001, 1.0)))
+
+static func set_bgm_volume(linear: float) -> void:
+    AudioServer.set_bus_volume_db(BUS_BGM, linear_to_db(clampf(linear, 0.0001, 1.0)))
+
+static func set_sfx_volume(linear: float) -> void:
+    AudioServer.set_bus_volume_db(BUS_SFX, linear_to_db(clampf(linear, 0.0001, 1.0)))
+'''
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 4. RUST CORE + PYTHON (PYGAME) HYBRID TEMPLATES
+# ═══════════════════════════════════════════════════════════════════════════
+
+TEMPLATE_RUST_GAME_CARGO = '''[package]
+name = "{crate_name}"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+'''
+
+TEMPLATE_RUST_GAME_LIB_RS = '''// core_rust/src/lib.rs
+// LJack Game Protocol: Pure Deterministic Game Simulation in Rust (Fixed 60Hz)
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct PlayerState {
+    pub x: f32,
+    pub y: f32,
+    pub vx: f32,
+    pub vy: f32,
+    pub is_grounded: bool,
+    pub hp: i32,
+    pub score: i32,
+}
+
+#[repr(C)]
+pub struct GameWorld {
+    pub tick_count: u64,
+    pub player: PlayerState,
+    pub gravity: f32,
+    pub speed: f32,
+    pub jump_strength: f32,
+}
+
+#[no_mangle]
+pub extern "C" fn rust_game_create() -> *mut GameWorld {
+    let world = Box::new(GameWorld {
+        tick_count: 0,
+        player: PlayerState {
+            x: 100.0,
+            y: 350.0,
+            vx: 0.0,
+            vy: 0.0,
+            is_grounded: false,
+            hp: 100,
+            score: 0,
+        },
+        gravity: 0.55,
+        speed: 5.20,
+        jump_strength: -11.50,
+    });
+    Box::into_raw(world)
+}
+
+#[no_mangle]
+pub extern "C" fn rust_game_destroy(ptr: *mut GameWorld) {
+    if !ptr.is_null() {
+        unsafe { drop(Box::from_raw(ptr)) };
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rust_game_step_tick(ptr: *mut GameWorld, input_left: bool, input_right: bool, input_jump: bool) {
+    if ptr.is_null() { return; }
+    let w = unsafe { &mut *ptr };
+    w.tick_count += 1;
+
+    // Horizontal Movement
+    if input_left { w.player.vx = -w.speed; }
+    else if input_right { w.player.vx = w.speed; }
+    else { w.player.vx = 0.0; }
+    w.player.x += w.player.vx;
+
+    // Jump & Gravity
+    if input_jump && w.player.is_grounded {
+        w.player.vy = w.jump_strength;
+        w.player.is_grounded = false;
+    }
+    w.player.vy += w.gravity;
+    w.player.y += w.player.vy;
+
+    // Floor collision
+    if w.player.y >= 500.0 {
+        w.player.y = 500.0;
+        w.player.vy = 0.0;
+        w.player.is_grounded = true;
+    }
+
+    // World boundary
+    if w.player.x < 0.0 { w.player.x = 0.0; }
+    if w.player.x > 768.0 { w.player.x = 768.0; }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_headless_10k_ticks_rust() {
+        let ptr = rust_game_create();
+        for i in 0..10_000 {
+            rust_game_step_tick(ptr, i % 2 == 0, false, i % 10 == 0);
+        }
+        let w = unsafe { &*ptr };
+        assert_eq!(w.tick_count, 10_000);
+        rust_game_destroy(ptr);
+    }
+}
+'''
+
+TEMPLATE_RUST_GAME_BRIDGE_PY = '''# -*- coding: utf-8 -*-
+"""
+Rust Core Engine ctypes FFI Bridge
+Connects Pygame rendering & input to the high-performance Rust physics engine.
+"""
+import os
+import sys
+import ctypes
+
+class PlayerStruct(ctypes.Structure):
+    _fields_ = [
+        ("x", ctypes.c_float),
+        ("y", ctypes.c_float),
+        ("vx", ctypes.c_float),
+        ("vy", ctypes.c_float),
+        ("is_grounded", ctypes.c_bool),
+        ("hp", ctypes.c_int32),
+        ("score", ctypes.c_int32),
+    ]
+
+class GameWorldStruct(ctypes.Structure):
+    _fields_ = [
+        ("tick_count", ctypes.c_uint64),
+        ("player", PlayerStruct),
+        ("gravity", ctypes.c_float),
+        ("speed", ctypes.c_float),
+        ("jump_strength", ctypes.c_float),
+    ]
+
+class RustGameBridge:
+    def __init__(self, dll_path: str = None):
+        self._lib = None
+        self._ptr = None
+        self.mock_mode = False
+
+        candidates = []
+        if dll_path:
+            candidates.append(dll_path)
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "core_rust", "target"))
+        candidates.extend([
+            os.path.join(base, "release", "core_rust.dll"),
+            os.path.join(base, "debug", "core_rust.dll"),
+            os.path.join(base, "release", "libcore_rust.so"),
+            os.path.join(base, "release", "libcore_rust.dylib"),
+        ])
+
+        for c in candidates:
+            if os.path.exists(c):
+                try:
+                    self._lib = ctypes.CDLL(c)
+                    break
+                except Exception:
+                    pass
+
+        if self._lib:
+            self._lib.rust_game_create.restype = ctypes.POINTER(GameWorldStruct)
+            self._lib.rust_game_destroy.argtypes = [ctypes.POINTER(GameWorldStruct)]
+            self._lib.rust_game_step_tick.argtypes = [
+                ctypes.POINTER(GameWorldStruct),
+                ctypes.c_bool,
+                ctypes.c_bool,
+                ctypes.c_bool
+            ]
+            self._ptr = self._lib.rust_game_create()
+        else:
+            self.mock_mode = True
+            self._mock_tick = 0
+            self._px, self._py = 100.0, 350.0
+            self._pvy = 0.0
+            self._grounded = False
+
+    def step_tick(self, left: bool, right: bool, jump: bool):
+        if self.mock_mode:
+            self._mock_tick += 1
+            if left: self._px -= 5.2
+            elif right: self._px += 5.2
+            if jump and self._grounded:
+                self._pvy = -11.5
+                self._grounded = False
+            self._pvy += 0.55
+            self._py += self._pvy
+            if self._py >= 500.0:
+                self._py = 500.0
+                self._pvy = 0.0
+                self._grounded = True
+            
+            p = type("Player", (), {"x": self._px, "y": self._py, "is_grounded": self._grounded, "hp": 100, "score": 0})()
+            return type("World", (), {"tick_count": self._mock_tick, "player": p})()
+
+        self._lib.rust_game_step_tick(self._ptr, left, right, jump)
+        return self._ptr.contents
+
+    def close(self):
+        if self._lib and self._ptr:
+            self._lib.rust_game_destroy(self._ptr)
+            self._ptr = None
+
+    def __del__(self):
+        self.close()
+'''
+
 
 def scaffold_multi_engine(target_dir: str, engine_type: str = "pygame", game_title: str = "ArcadeGame"):
     print("=" * 65)
-    print(" [LJack Game Protocol v1.2.0] Multi-Engine Game Scaffolder")
+    print(" [LJack Game Protocol v1.5.0] Multi-Engine Game Scaffolder")
     print("=" * 65)
     print(f"[*] Target Directory: {target_dir}")
     print(f"[*] Target Engine   : {engine_type.upper()}")
@@ -558,6 +896,7 @@ def scaffold_multi_engine(target_dir: str, engine_type: str = "pygame", game_tit
             os.path.join(target_dir, "src", "core", "__init__.py"): "",
             os.path.join(target_dir, "src", "core", "state.py"): TEMPLATE_PYGAME_STATE,
             os.path.join(target_dir, "src", "core", "simulation.py"): TEMPLATE_PYGAME_SIM,
+            os.path.join(target_dir, "src", "core", "audio_harness.py"): TEMPLATE_PYGAME_AUDIO,
             os.path.join(target_dir, "src", "core", "save_manager.py"): '''# -*- coding: utf-8 -*-
 import os, json, tempfile
 def atomic_save(path: str, data: dict):
@@ -577,7 +916,9 @@ def atomic_save(path: str, data: dict):
             os.path.join(target_dir, "run_game.py"): '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os, sys, pygame
+from src.core.audio_harness import AudioHarness
 PRODUCTION_BUILD = False  # Set True for commercial Steam/Stove packaging
+audio = AudioHarness()
 print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
 ''',
             os.path.join(target_dir, "README.md"): f"# {game_title} (Pygame)\\nBuilt with LJack Game Protocol (Commercial Edition).",
@@ -590,6 +931,7 @@ print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
         files = {
             os.path.join(target_dir, "src", "core", "state.js"): TEMPLATE_TAURI_STATE_JS,
             os.path.join(target_dir, "src", "core", "simulation.js"): TEMPLATE_TAURI_SIM_JS,
+            os.path.join(target_dir, "src", "core", "audio.js"): TEMPLATE_TAURI_AUDIO_JS,
             os.path.join(target_dir, "index.html"): TEMPLATE_TAURI_INDEX_HTML,
             os.path.join(target_dir, "tests", "test_sim_headless.js"): TEMPLATE_TAURI_HEADLESS_TEST_JS,
             os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
@@ -607,10 +949,105 @@ print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
             os.path.join(target_dir, "project.godot"): TEMPLATE_GODOT_PROJECT.format(game_title=game_title),
             os.path.join(target_dir, "scripts", "core", "state.gd"): TEMPLATE_GODOT_STATE_GD,
             os.path.join(target_dir, "scripts", "core", "simulation.gd"): TEMPLATE_GODOT_SIM_GD,
+            os.path.join(target_dir, "scripts", "core", "audio_harness.gd"): TEMPLATE_GODOT_AUDIO_GD,
             os.path.join(target_dir, "tests", "test_sim_headless.gd"): TEMPLATE_GODOT_HEADLESS_TEST,
             os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
             os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
             os.path.join(target_dir, "README.md"): f"# {game_title} (Godot 4.x)\\nBuilt with LJack Game Protocol.",
+        }
+
+    elif engine_type == "rust_pygame":
+        crate_name = game_title.lower().replace("-", "_") + "_core"
+        os.makedirs(os.path.join(target_dir, "core_rust", "src"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "src", "core"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "tests"), exist_ok=True)
+        os.makedirs(os.path.join(target_dir, "locales"), exist_ok=True)
+        files = {
+            os.path.join(target_dir, "core_rust", "Cargo.toml"): TEMPLATE_RUST_GAME_CARGO.format(crate_name=crate_name),
+            os.path.join(target_dir, "core_rust", "src", "lib.rs"): TEMPLATE_RUST_GAME_LIB_RS,
+            os.path.join(target_dir, "src", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "__init__.py"): "",
+            os.path.join(target_dir, "src", "core", "rust_engine.py"): TEMPLATE_RUST_GAME_BRIDGE_PY,
+            os.path.join(target_dir, "src", "core", "audio_harness.py"): TEMPLATE_PYGAME_AUDIO,
+            os.path.join(target_dir, "src", "core", "save_manager.py"): '''# -*- coding: utf-8 -*-
+import os, json, tempfile
+def atomic_save(path: str, data: dict):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    tmp = tempfile.NamedTemporaryFile("w", dir=os.path.dirname(os.path.abspath(path)), delete=False, encoding="utf-8")
+    try:
+        json.dump(data, tmp, indent=2, ensure_ascii=False)
+        tmp.flush(); os.fsync(tmp.fileno()); tmp.close()
+        os.replace(tmp.name, path)
+    except Exception as e:
+        if os.path.exists(tmp.name): os.remove(tmp.name)
+        raise e
+''',
+            os.path.join(target_dir, "tests", "test_sim_headless.py"): '''# -*- coding: utf-8 -*-
+import os, sys, time, unittest
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+os.environ["SDL_AUDIODRIVER"] = "dummy"
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from src.core.rust_engine import RustGameBridge
+
+class TestRustGameHeadless(unittest.TestCase):
+    def test_01_rust_10000_ticks(self):
+        bridge = RustGameBridge()
+        start = time.perf_counter()
+        for i in range(10000):
+            bridge.step_tick(i % 2 == 0, False, i % 10 == 0)
+        elapsed = time.perf_counter() - start
+        print(f"\\n[PASS] 10,000 Ticks simulated in {elapsed*1000:.1f}ms (Mock: {bridge.mock_mode})")
+        bridge.close()
+        self.assertLess(elapsed, 0.5)
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
+''',
+            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '",\\n  "MSG_START": "Press Space to Start"\\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '",\\n  "MSG_START": "시작하려면 스페이스바를 누르세요"\\n}',
+            os.path.join(target_dir, "run_game.py"): '''#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os, sys, pygame
+from src.core.rust_engine import RustGameBridge
+from src.core.audio_harness import AudioHarness
+
+PRODUCTION_BUILD = False
+audio = AudioHarness()
+bridge = RustGameBridge()
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("''' + game_title + ''' (Rust Core + Pygame)")
+clock = pygame.time.Clock()
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            running = False
+
+    keys = pygame.key.get_pressed()
+    left = keys[pygame.K_LEFT] or keys[pygame.K_a]
+    right = keys[pygame.K_RIGHT] or keys[pygame.K_d]
+    jump = keys[pygame.K_SPACE] or keys[pygame.K_UP]
+
+    # Rust Core simulation tick
+    world = bridge.step_tick(left, right, jump)
+
+    # Pygame Draw
+    screen.fill((15, 23, 42))
+    pygame.draw.rect(screen, (71, 85, 105), (0, 500, 800, 100))
+    p = world.player
+    color = (56, 189, 248) if p.is_grounded else (251, 191, 36)
+    pygame.draw.rect(screen, color, (int(p.x), int(p.y), 32, 48))
+
+    pygame.display.flip()
+    clock.tick(60)
+
+bridge.close()
+pygame.quit()
+''',
+            os.path.join(target_dir, "README.md"): f"# {game_title} (Rust Core + Pygame)\\nBuilt with LJack Game Protocol (Rust-Python Hybrid Edition).\\n\\n## Build Rust Core\\n```bash\\ncd core_rust\\ncargo build --release\\n```\\n\\n## Run Headless Test\\n```bash\\npython tests/test_sim_headless.py\\n```\\n\\n## Run Game\\n```bash\\npython run_game.py\\n```",
         }
 
     else:
@@ -634,7 +1071,7 @@ print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
 def main():
     parser = argparse.ArgumentParser(description="LJack Multi-Engine Game Scaffolder")
     parser.add_argument("target_dir", nargs="?", default=".", help="Target directory")
-    parser.add_argument("--type", choices=["pygame", "tauri", "godot", "text"], default="pygame", help="Engine type")
+    parser.add_argument("--type", choices=["pygame", "tauri", "godot", "rust_pygame", "text"], default="pygame", help="Engine type")
     parser.add_argument("--title", default="ArcadeGame", help="Game Title")
     args = parser.parse_args()
 

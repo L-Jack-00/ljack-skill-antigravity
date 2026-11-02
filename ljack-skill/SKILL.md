@@ -47,7 +47,7 @@ description: >-
 [헤드리스 자체 테스트 러너 & 공용 린터 스크립트 (Headless Test & Bundled Linters)]
 ```
 
-- **기둥 1: 코어와 입출력 분리**: 상태/연산/정책은 UI 및 드라이버와 분리하고 이벤트/델리게이트로 모킹.
+- **기둥 1: 코어와 입출력 분리**: 상태/연산/정책은 UI 및 드라이버와 분리하고 이벤트/델리게이트로 모킹 (Rust 고성능 코어 + Python 인터페이스 이원화 아키텍처 공식 지원).
 - **기둥 2: 슈퍼바이저-워커 모델**: 가벼운 감시 메인 루프와 비차단 비동기 워커 분기 실행.
 - **기둥 3: 명시적 FSM & 컨텍스트**: 상태 전이 규칙과 단일 소유권으로 상태 충돌 원천 방지.
 - **기둥 4: 무부하 라이프사이클**: OS 이벤트 기반 CPU 0% 동결(Pause) 및 최우선 소프트웨어 비상정지.
@@ -120,7 +120,7 @@ description: >-
 에이전트는 보일러플레이트 작성과 검증 코드를 매번 새로 치지 않고 번들링된 표준 도구를 즉각 호출합니다:
 
 ### 🛠️ 내장 스크립트 도구 (`scripts/`)
-- `scripts/harness_scaffolder.py`: 10대 기둥 골격(FSM, Pause, 비상정지, Headless 테스트) 0초 생성 (**LLM 생성 토큰 12,000개 절감**).
+- `scripts/harness_scaffolder.py`: 10대 기둥 골격(CLI, Desktop, API, Rust-Python 이원화 하네스) 0초 생성 (**LLM 생성 토큰 12,000개 절감**).
 - `scripts/harness_doctor.py`: AST 정적 분석 기반 하네스 준수율 채점(0~100) 및 3줄 핵심 진단 (**LLM 검토 토큰 절감**).
 - `scripts/ux_copy_linter.py`: UI 레이블, 윈도우 제목, 툴팁, 릴리즈 노트 내 개발자 은어 0.1초 자동 스캔.
 - `scripts/release_cleaner.py`: 배포 전 임시 로그(`test_*.log`, `*.tmp`) 자동 소거 및 아티팩트 청결화.
@@ -128,7 +128,7 @@ description: >-
 
 ### 📚 심화 참조 레퍼런스 (`references/`)
 - [REA 클린룸 재구축 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-skill/references/rea_cleanroom.md): 상용 바이너리 핀셋 슬라이싱 및 순방향 하네스 전환 명세.
-- [도메인별 하네스 적용 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-skill/references/domain_guides.md): PyQt6/데스크톱, 웹 프론트/백엔드, 데이터 파이프라인별 구현 레시피.
+- [도메인별 하네스 적용 가이드](file:///C:/Users/SBK/.gemini/config/skills/ljack-skill/references/domain_guides.md): PyQt6/데스크톱, 웹, 데이터 파이프라인, Rust-Python 이원화 하네스 구현 레시피.
 - [자가 치유 트러블슈팅 플레이북](file:///C:/Users/SBK/.gemini/config/skills/ljack-skill/references/troubleshooting_playbook.md): Windows Defender 휴리스틱 회피, CP949 인코딩 안전망 등 단골 에러 해결 공식.
 
 ---
