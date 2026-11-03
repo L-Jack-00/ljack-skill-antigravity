@@ -45,6 +45,11 @@ GAME_PROHIBITED_TERMS = {
     "coyote time": "jump forgiveness, response buffer",
     "치트": "보조 옵션, 편의 기능 (상용 릴리즈 봉인)",
     "시뮬레이터": "연습장, 시뮬레이션 모드, 샌드박스",
+    # Author-centric changelog shorthand in text/locales
+    "임시 수정": "기능의 목적 또는 룰 명세로 대체",
+    "버그 수정": "게임 룰/예외 방어 스펙으로 기술",
+    "ai 생성": "도메인 설명으로 대체",
+    "temp fix": "describe game rule specification instead",
 }
 
 # Regex patterns catching visible string literals in draw/render/text setters
