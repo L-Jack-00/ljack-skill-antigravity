@@ -80,7 +80,7 @@ description: >-
 4. **손맛과 재미는 반드시 사용자에게 검수받는다 (Playable Review Gate)**: 배포 전 로컬 실행 스크립트와 밸런스 수치 요약표를 사용자에게 제출하고 직접 플레이 검수를 요청한다.
 5. **세이브 데이터 원자성 절대 사수**: 세이브 루틴은 반드시 원자적 교체(`os.replace`) 패턴을 적용하여 데이터 유실을 0%로 만든다.
 6. **상용 빌드 디버그 봉인 의무화**: 배포 전 `PRODUCTION_BUILD` 플래그로 `[F1]` 튜너 및 치트를 봉인한다.
-7. **하드코딩 텍스트 금지 (i18n 준수)**: UI와 안내 메시지는 `locales/en.json`, `locales/ko.json` 딕셔너리로 분리한다.
+7. **하드코딩 텍스트 금지 및 자동 치환 (i18n 준수)**: UI와 안내 메시지는 `locales/en.json`, `locales/ko.json` 딕셔너리로 분리하며, `scripts/localization_linter.py --rewrite`를 통해 하드코딩된 리터럴을 `t("KEY")`로 원본 소스 코드에 인플레이스 자동 치환한다.
 8. **🎨 그래픽 종류별 실전 툴 나침반 준수**: UI=벡터/SVG, 원화=SDXL, 도트=SD1.5, 효과=셰이더로 최적 분업한다.
 9. **🎵 오디오 하네스 무결성 사수**: 무사운드 환경 크래시 방지 더미 폴백, 웹 오토플레이 해제 가드, 3-Bus 볼륨 분리를 적용한다.
 10. **사용자 표면 UX 카피 & 독자 중심 문서화 준수 (LJack Skill 연계)**: 인게임 UI 레이블/다국어 사전에서 개발자 은어를 100% 차단하고, 코드 주석과 README에서 'vX.X 버그 픽스', '임시 땜질' 등 나만 아는 변경점 서술을 배제하고 게이머/협업자 관점의 목적성 설명만 기술한다.
@@ -133,7 +133,7 @@ description: >-
 - `scripts/vector_asset_builder.py`: 초경량 SVG 카드 프레임 및 뱃지 빌더 (comic 카툰풍 / metallic 메탈릭풍 지원).
 - `scripts/game_scaffolder.py`: Pygame, Tauri, Godot, Rust+Python Hybrid 10대 기둥 골격 0초 생성 (**토큰 15,000개 절감**).
 - `scripts/game_release_doctor.py`: 상용 출시 준비도(0~100), 오디오 안전망, UX 카피 무결성 및 스팀/스토브 승인 게이트 정적 진단 닥터.
-- `scripts/localization_linter.py`: 다국어(i18n) 번역 무결성 및 사전 내 개발자 은어(UX Copy) 동시 감사 도구.
+- `scripts/localization_linter.py`: 다국어(i18n) 번역 무결성 감사 및 `--rewrite` 플래그 기반 원본 소스 코드 인플레이스 자동 치환(`t("KEY")`) 및 런타임 헬퍼 자동 스캐폴딩 도구.
 - `scripts/tick_sim_runner.py`: Reachability Solver 및 헤드리스 1만 틱 초고속 시뮬레이터.
 - `scripts/play_preview_launcher.py`: 엔진 자동 감지 기반 플레이 검수 브리핑 도구.
 - `scripts/web_packager.py`: WebAssembly(HTML5) 브라우저 원클릭 웹 패키저.

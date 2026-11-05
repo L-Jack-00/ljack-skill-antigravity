@@ -183,7 +183,7 @@ class GameReleaseDoctor:
             checks.append(("[PASS]", "Pillar 8: Commercial Localization (locales/ with >= 2 languages) verified (+15)"))
         else:
             checks.append(("[WARN]", "Pillar 8: Missing locales/ directory or multi-language dictionaries (+0)"))
-            action_items.append("Run python scripts/localization_linter.py --extract to generate locales/en.json and ko.json.")
+            action_items.append("Run 'python scripts/localization_linter.py <dir> --rewrite' to extract dictionaries and auto-replace hardcoded literals with t('KEY').")
 
         # 6. UX Copy Gate Integrity (10 pts)
         if not self.ux_copy_violations:
