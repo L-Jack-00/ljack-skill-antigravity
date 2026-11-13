@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.5.0] Multi-Engine Zero-Token Game Scaffolder
-====================================================================
-Instantly generates complete, production-grade Game Harness scaffolding
+[LJack Game Protocol v1.6.0] Multi-Engine Game Scaffolder
+=========================================================
+Instantly generates structured Game Harness scaffolding
 across 4 major engine ecosystems:
   1. Pygame (Python 2D / 2.5D with F1 Live Tuner, Audio Safety & Dummy Headless Guard)
   2. Tauri + HTML5 (Canvas / WebGL with Accumulator Loop, WebAudio Gesture Guard & Node Headless Runner)
   3. Godot Engine 4.x (GDScript with Headless 10k-Tick Rig, AudioServer Bus & CanvasLayer F1 Tuner)
   4. Rust + Python Hybrid (High-Speed Rust Core Simulation + Python Pygame Display & Audio Rig)
 
-Saves ~15,000 LLM output generation tokens per project.
-
 Usage:
-    python game_scaffolder.py <target_dir> --type pygame|tauri|godot|rust_pygame|text [--title "MyGame"]
+    python game_scaffolder.py <target_dir> --type pygame|tauri|godot|rust_pygame [--title "MyGame"]
 """
 
 import os
@@ -322,7 +320,7 @@ TEMPLATE_TAURI_INDEX_HTML = '''<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>LJack Game - Tauri/HTML5 Harness</title>
+    <title>__GAME_TITLE__</title>
     <style>
         body { margin: 0; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: monospace; }
         #canvas-wrap { position: relative; width: 800px; height: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 2px solid #334155; }
@@ -881,7 +879,7 @@ class RustGameBridge:
 
 def scaffold_multi_engine(target_dir: str, engine_type: str = "pygame", game_title: str = "ArcadeGame"):
     print("=" * 65)
-    print(" [LJack Game Protocol v1.5.0] Multi-Engine Game Scaffolder")
+    print(" [LJack Game Protocol v1.6.0] Multi-Engine Game Scaffolder")
     print("=" * 65)
     print(f"[*] Target Directory: {target_dir}")
     print(f"[*] Target Engine   : {engine_type.upper()}")
@@ -921,7 +919,7 @@ PRODUCTION_BUILD = False  # Set True for commercial Steam/Stove packaging
 audio = AudioHarness()
 print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
 ''',
-            os.path.join(target_dir, "README.md"): f"# {game_title} (Pygame)\\nBuilt with LJack Game Protocol (Commercial Edition).",
+            os.path.join(target_dir, "README.md"): f"# {game_title}\n\n2D indie game built on Python/Pygame with fixed-tick simulation, atomic persistence, and multi-language support.",
         }
 
     elif engine_type == "tauri":
@@ -932,12 +930,12 @@ print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
             os.path.join(target_dir, "src", "core", "state.js"): TEMPLATE_TAURI_STATE_JS,
             os.path.join(target_dir, "src", "core", "simulation.js"): TEMPLATE_TAURI_SIM_JS,
             os.path.join(target_dir, "src", "core", "audio.js"): TEMPLATE_TAURI_AUDIO_JS,
-            os.path.join(target_dir, "index.html"): TEMPLATE_TAURI_INDEX_HTML,
+            os.path.join(target_dir, "index.html"): TEMPLATE_TAURI_INDEX_HTML.replace("__GAME_TITLE__", game_title),
             os.path.join(target_dir, "tests", "test_sim_headless.js"): TEMPLATE_TAURI_HEADLESS_TEST_JS,
-            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
-            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
-            os.path.join(target_dir, "package.json"): '{\\n  "name": "' + game_title.lower() + '",\\n  "version": "0.1.0",\\n  "type": "module"\\n}',
-            os.path.join(target_dir, "README.md"): f"# {game_title} (Tauri + HTML5)\\nBuilt with LJack Game Protocol.",
+            os.path.join(target_dir, "locales", "en.json"): '{\n  "MSG_TITLE": "' + game_title + '"\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\n  "MSG_TITLE": "' + game_title + '"\n}',
+            os.path.join(target_dir, "package.json"): '{\n  "name": "' + game_title.lower() + '",\n  "version": "0.1.0",\n  "type": "module"\n}',
+            os.path.join(target_dir, "README.md"): f"# {game_title}\n\nDesktop & HTML5 Canvas game built with Tauri and fixed-timestep accumulator simulation.",
         }
 
     elif engine_type == "godot":
@@ -951,9 +949,9 @@ print("Running Game. (PRODUCTION_BUILD:", PRODUCTION_BUILD, ")")
             os.path.join(target_dir, "scripts", "core", "simulation.gd"): TEMPLATE_GODOT_SIM_GD,
             os.path.join(target_dir, "scripts", "core", "audio_harness.gd"): TEMPLATE_GODOT_AUDIO_GD,
             os.path.join(target_dir, "tests", "test_sim_headless.gd"): TEMPLATE_GODOT_HEADLESS_TEST,
-            os.path.join(target_dir, "locales", "en.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
-            os.path.join(target_dir, "locales", "ko.json"): '{\\n  "MSG_TITLE": "' + game_title + '"\\n}',
-            os.path.join(target_dir, "README.md"): f"# {game_title} (Godot 4.x)\\nBuilt with LJack Game Protocol.",
+            os.path.join(target_dir, "locales", "en.json"): '{\n  "MSG_TITLE": "' + game_title + '"\n}',
+            os.path.join(target_dir, "locales", "ko.json"): '{\n  "MSG_TITLE": "' + game_title + '"\n}',
+            os.path.join(target_dir, "README.md"): f"# {game_title}\n\nGodot 4.x game project with decoupled physics simulation and offline verification.",
         }
 
     elif engine_type == "rust_pygame":
@@ -1047,7 +1045,7 @@ while running:
 bridge.close()
 pygame.quit()
 ''',
-            os.path.join(target_dir, "README.md"): f"# {game_title} (Rust Core + Pygame)\\nBuilt with LJack Game Protocol (Rust-Python Hybrid Edition).\\n\\n## Build Rust Core\\n```bash\\ncd core_rust\\ncargo build --release\\n```\\n\\n## Run Headless Test\\n```bash\\npython tests/test_sim_headless.py\\n```\\n\\n## Run Game\\n```bash\\npython run_game.py\\n```",
+            os.path.join(target_dir, "README.md"): f"# {game_title} (Rust Core + Pygame)\n\nHybrid game architecture separating a deterministic Rust simulation engine (`core_rust/`) from the Pygame interface layer.\n\n## Build Rust Core\n```bash\ncd core_rust\ncargo build --release\n```\n\n## Run Headless Test\n```bash\npython tests/test_sim_headless.py\n```\n\n## Run Game\n```bash\npython run_game.py\n```",
         }
 
     else:
@@ -1064,14 +1062,13 @@ pygame.quit()
 
     print("-" * 65)
     print(f"[SUCCESS] Scaffolding completed. {created} files generated for {engine_type.upper()}.")
-    print("[TOKEN SAVED] Saved ~15,000 LLM output generation tokens.")
     print("=" * 65)
     return 0
 
 def main():
     parser = argparse.ArgumentParser(description="LJack Multi-Engine Game Scaffolder")
     parser.add_argument("target_dir", nargs="?", default=".", help="Target directory")
-    parser.add_argument("--type", choices=["pygame", "tauri", "godot", "rust_pygame", "text"], default="pygame", help="Engine type")
+    parser.add_argument("--type", choices=["pygame", "tauri", "godot", "rust_pygame"], default="pygame", help="Engine type")
     parser.add_argument("--title", default="ArcadeGame", help="Game Title")
     args = parser.parse_args()
 

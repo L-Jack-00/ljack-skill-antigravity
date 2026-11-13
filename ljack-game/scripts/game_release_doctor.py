@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.5.0] Commercial Game Release Doctor & Health Auditor
+[LJack Game Protocol v1.6.0] Commercial Game Release Doctor & Health Auditor
 ============================================================================
 Performs exhaustive AST & static inspection of the game project against
 Steam/Commercial Store release standards:

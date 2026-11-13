@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.1.0] Headless Tick Simulator & Reachability Solver
+[LJack Game Protocol v1.6.0] Headless Tick Simulator & Reachability Solver
 ==========================================================================
 Executes high-speed headless ticks (10,000 ~ 50,000 ticks) in memory to audit:
   1. Reachability Solver: Mathematical check for impossible platform heights (Unwinnable maps)

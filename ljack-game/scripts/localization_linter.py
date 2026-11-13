@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.5.0] Commercial Localization & In-Place Rewrite Linter
+[LJack Game Protocol v1.6.0] Commercial Localization & In-Place Rewrite Linter
 =============================================================================
 Scans game source code (Pygame, Tauri/JS, Godot GDScript) for hardcoded
 display text, ensures multi-language dictionary (i18n) compliance,
@@ -19,7 +19,7 @@ Key Features:
 - UX Copy Auditing: Audits dictionaries for internal developer/harness jargon.
 
 Usage:
-    python localization_linter.py <game_directory> [--extract] [--rewrite] [--no-backup]
+    python localization_linter.py <game_directory> [--extract] [--rewrite] [--strict] [--no-backup]
 """
 
 import os
@@ -261,8 +261,6 @@ def rewrite_file_content(fpath: str, ext: str, text_to_key: dict, make_backup: b
         if stripped.startswith(("#", "//", "/*", "*")):
             modified_lines.append(line)
             continue
-        if f'{fn_name}(' in line or f'{fn_name} ("' in line or f"{fn_name} ('" in line:
-            pass
 
         new_line = line
         for pattern in PATTERNS:
@@ -337,13 +335,13 @@ def audit_localization(game_dir: str, do_extract: bool = False, do_rewrite: bool
         ko_path = os.path.join(locales_dir, "ko.json")
         if os.path.isfile(en_path):
             try:
-                with open(en_path, "r", encoding="utf-8") as fp:
+                with open(en_path, "r", encoding="utf-8-sig") as fp:
                     en_dict = json.load(fp)
             except Exception:
                 pass
         if os.path.isfile(ko_path):
             try:
-                with open(ko_path, "r", encoding="utf-8") as fp:
+                with open(ko_path, "r", encoding="utf-8-sig") as fp:
                     ko_dict = json.load(fp)
             except Exception:
                 pass
@@ -483,17 +481,22 @@ def audit_localization(game_dir: str, do_extract: bool = False, do_rewrite: bool
         print("  - Original backups created (.bak).")
 
     print("=" * 65)
-    return len(hardcoded_strings)
+    remaining_hardcoded = 0 if (do_rewrite and hardcoded_strings) else len(hardcoded_strings)
+    return remaining_hardcoded + len(ux_violations)
 
 def main():
     parser = argparse.ArgumentParser(description="LJack Commercial Localization Linter & In-Place Rewriter")
     parser.add_argument("game_dir", nargs="?", default=".", help="Target game directory")
     parser.add_argument("--extract", action="store_true", help="Auto-extract literals to locales/en.json")
     parser.add_argument("--rewrite", "--fix", action="store_true", dest="rewrite", help="In-place rewrite source files with t(\"KEY\") and auto-scaffold i18n helpers")
+    parser.add_argument("--strict", action="store_true", help="Exit with code 1 if hardcoded strings or UX Copy violations exist")
     parser.add_argument("--no-backup", action="store_true", help="Disable creating .bak backup files")
     args = parser.parse_args()
 
-    return 0 if audit_localization(args.game_dir, args.extract, args.rewrite, not args.no_backup) == 0 else 0
+    issues = audit_localization(args.game_dir, args.extract, args.rewrite, not args.no_backup)
+    if args.strict and issues > 0:
+        return 1
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

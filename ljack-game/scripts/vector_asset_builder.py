@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-vector_asset_builder.py - 엘잭 게임 초경량 벡터(SVG) 에셋 빌더 (v1.4.0)
+vector_asset_builder.py - 엘잭 게임 초경량 벡터(SVG) 에셋 빌더 (v1.6.0)
 
 게임 UI 제작 시 무거운 외부 툴 없이 명령줄 하나로 
 TCG 카드 프레임, 공격력 칼 뱃지, 체력 플라크, 나선 룬 SVG를 즉시 생성합니다.

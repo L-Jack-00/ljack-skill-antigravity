@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.4.0] Zero-Token Runtime Harness Scaffolder
-==============================================================
-Instantly generates complete, production-grade LJack runtime harness
-scaffolding (Decoupled Core, FSM, Zero-load Pause, Emergency Stop,
-UTF-8 Guard, and Headless Test Runner) in 0 seconds.
-
-Eliminates 8,000 ~ 15,000 LLM output generation tokens per project.
+[LJack Protocol v7.5.0] Runtime Harness Scaffolder
+==================================================
+Generates structured LJack runtime harness scaffolding
+(Decoupled Core, FSM, Event-Driven Pause, Emergency Stop,
+UTF-8 Guard, and Headless Test Runner) with zero boilerplate overhead.
 
 Usage:
     python harness_scaffolder.py <target_dir> [--type cli|desktop|api|rust_hybrid] [--name ProjectName]
@@ -113,7 +111,7 @@ class HarnessSupervisor:
         return self._state
 
     def pause(self) -> None:
-        """Pillar 4: Zero-load lifecycle pause (CPU 0% waiting)."""
+        """Pillar 4: Event-driven idle pause without busy-waiting."""
         self._pause_event.clear()
         self._state = HarnessState.PAUSED
 
@@ -285,12 +283,12 @@ if __name__ == "__main__":
 
 TEMPLATE_README = '''# {project_name}
 
-Built with **LJack Protocol (v7.4.0)** Runtime Harness Engineering.
+Modular application architecture with decoupled core computation, explicit state transitions, and offline unit verification.
 
 ## 🏛️ Architecture
-- `src/core/`: Pure domain models, FSM state machine, decoupled computation logic.
-- `src/harness/`: Supervisor loop, zero-load pause guard, emergency stop interlock.
-- `tests/`: 0.1s headless self-test runner (Zero external dependencies).
+- `src/core/`: Pure domain models, explicit state machine, decoupled computation logic.
+- `src/harness/`: Supervisor loop, event-driven pause guard, emergency stop handler.
+- `tests/`: Fast offline verification runner (zero external dependencies).
 
 ## 🚀 Headless Verification
 ```bash
@@ -501,13 +499,13 @@ class RustCoreBridge:
 
 TEMPLATE_RUST_HYBRID_README = '''# {project_name} (Rust Core + Python Interface)
 
-Built with **LJack Protocol (v7.4.0)** Rust-Python Hybrid Runtime Harness.
+High-performance hybrid application separating a deterministic Rust computation engine from a Python interface layer.
 
 ## 🏛️ Architecture (Decoupled Core & Interface)
-- `rust_core/`: Pure, deterministic computation engine in Rust (`cdylib` C-ABI, 0 I/O dependencies).
-- `src/core/`: Python FFI bridge (`rust_bridge.py`) using native `ctypes` with mock fallback.
-- `src/harness/`: Python supervisor loop, zero-load pause, emergency stops.
-- `tests/`: Headless verification suite.
+- `rust_core/`: Pure, deterministic computation engine in Rust (`cdylib` C-ABI, zero I/O dependencies).
+- `src/core/`: Python FFI bridge (`rust_bridge.py`) using native `ctypes` with Python fallback.
+- `src/harness/`: Python supervisor loop, event-driven pause, emergency stops.
+- `tests/`: Offline verification suite.
 
 ## 🔨 Build Rust Core (Optional for Release)
 ```bash
@@ -527,7 +525,7 @@ python run_app.py
 '''
 def scaffold_project(target_dir: str, project_type: str = "cli", project_name: str = "AppCore"):
     print("=" * 65)
-    print(" [LJack Protocol] Zero-Token Runtime Harness Scaffolder")
+    print(" [LJack Protocol v7.5.0] Runtime Harness Scaffolder")
     print("=" * 65)
     print(f"[*] Target Directory: {target_dir}")
     print(f"[*] Architecture Type: {project_type.upper()}")
@@ -634,7 +632,6 @@ if __name__ == "__main__":
 
     print("-" * 65)
     print(f"[SUCCESS] Scaffolding completed. {created_count} files generated.")
-    print("[TOKEN SAVED] Saved ~12,000 LLM output generation tokens.")
     print("=" * 65)
     print("Next step: Run headless verification runner:")
     print(f"  cd \"{target_dir}\" && python tests/test_headless.py")
@@ -643,7 +640,7 @@ if __name__ == "__main__":
 
 
 def main():
-    parser = argparse.ArgumentParser(description="LJack Protocol Zero-Token Harness Scaffolder")
+    parser = argparse.ArgumentParser(description="LJack Protocol Runtime Harness Scaffolder")
     parser.add_argument("target_dir", nargs="?", default=".", help="Target directory to scaffold into")
     parser.add_argument("--type", choices=["cli", "desktop", "api", "rust_hybrid"], default="cli", help="Architecture template type")
     parser.add_argument("--name", default="AppCore", help="Name of the application/module")

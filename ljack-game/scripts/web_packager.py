@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.1.0] WebAssembly / HTML5 Web Game Packager
+[LJack Game Protocol v1.6.0] WebAssembly / HTML5 Web Game Packager
 ==================================================================
 Prepares and packages Python/Pygame projects for instant browser execution
 using WebAssembly (Pygbag / Canvas HTML5).
@@ -29,7 +29,7 @@ TEMPLATE_INDEX_HTML = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{game_title} - LJack Web Preview</title>
+    <title>{game_title} - Web Playable Build</title>
     <style>
         body {{
             margin: 0;
@@ -68,7 +68,7 @@ TEMPLATE_INDEX_HTML = """<!DOCTYPE html>
 <body>
     <div id="game-container">
         <h1>🎮 {game_title} <span class="badge">WebAssembly Ready</span></h1>
-        <p>Built with <strong>LJack Game Protocol</strong> (Zero-Token Harness & Deterministic Tick Engine).</p>
+        <p>Instant browser-playable package for <strong>{game_title}</strong>.</p>
         
         <div class="cmd-box">
             <strong># Instant Local Web Host via Pygbag:</strong><br>

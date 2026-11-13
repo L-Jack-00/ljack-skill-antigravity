@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.4.0] Runtime Harness Static Doctor & Health Checker
+[LJack Protocol v7.5.0] Runtime Harness Static Doctor & Health Checker
 ======================================================================
-Performs fast, zero-token AST & static inspection of the target project
+Performs fast AST & static inspection of the target project
 to score compliance with the LJack 10 Pillars (I/O Decoupling, FSM,
-Zero-load Pause, Emergency Stop, UTF-8 Guard, Headless Tests).
+Event-Driven Pause, Emergency Stop, UTF-8 Guard, Headless Tests).
 
-Outputs a concise, 3-line actionable diagnosis, eliminating thousands
-of LLM context-reading and self-analysis tokens.
+Outputs a concise diagnostic summary and actionable checklist.
 
 Usage:
     python harness_doctor.py <target_directory> [--strict]
@@ -152,7 +151,7 @@ class HarnessDoctor:
             checks.append(("[PASS]", "Pillar 4: Zero-Load Pause (Event-driven lifecycle) present (+15)"))
         elif self.has_busy_waiting_antipattern:
             checks.append(("[FAIL]", "Pillar 4: Busy-waiting anti-pattern (while True: pass) detected! (+0)"))
-            action_items.append("Replace busy-waiting spin loops with threading.Event.wait() for CPU 0% idle.")
+            action_items.append("Replace busy-waiting spin loops with threading.Event.wait() to eliminate idle CPU spinning.")
         else:
             checks.append(("[WARN]", "Pillar 4: No zero-load pause/resume event mechanism found (+0)"))
             action_items.append("Implement threading.Event for non-busy worker pause/resume.")

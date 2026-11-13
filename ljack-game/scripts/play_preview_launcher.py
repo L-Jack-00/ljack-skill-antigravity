@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.2.0] Multi-Engine Playable Review Gate Helper
+[LJack Game Protocol v1.6.0] Multi-Engine Playable Review Gate Helper
 =====================================================================
 Detects engine ecosystem (Pygame, Tauri/HTML5, Godot 4.x), extracts
 game-feel tuning parameters, and generates structured Playable Review
@@ -24,7 +24,7 @@ if sys.stdout.encoding != 'utf-8':
 def detect_engine_and_inspect(game_dir: str):
     game_dir = os.path.abspath(game_dir)
     print("=" * 65)
-    print(" [LJack Game Protocol v1.2.0] Playable Review Gate Inspection")
+    print(" [LJack Game Protocol v1.6.0] Playable Review Gate Inspection")
     print("=" * 65)
     print(f"[*] Target Directory: {game_dir}")
 
