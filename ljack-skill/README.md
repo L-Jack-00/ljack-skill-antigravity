@@ -1,20 +1,20 @@
 # 엘잭 스킬 (LJack Protocol)
-## 범용 런타임 하네스 엔지니어링 & 자율 에이전틱 개발 프로토콜 (v7.5.0)
+## 범용 런타임 하네스 엔지니어링 & 자율 에이전틱 개발 프로토콜 (v7.6.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-blue.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-7.5.0-green.svg)](#)
+[![Version](https://img.shields.io/badge/Version-7.6.0-green.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
 본 모듈은 AI 에이전트가 소프트웨어 개발 시 사소한 기술 확인을 위해 중간에 멈추지 않고,  
 견고한 **[설계/톤앤매너 고정 ➔ 스캐폴딩 ➔ 코딩 ➔ 자체 테스트 ➔ 자가 치유(Self-Healing) ➔ 비주얼/인터랙션/닥터/UX카피 감사 ➔ 격리 패키징 및 배포 준비]**까지 단일 흐름으로 완주하도록 규정하는 범용 아키텍처 프로토콜입니다.
 
 > **⚠️ 버전 독립성 불변 원칙 (Version Independence Principle)**:  
-> 본 프로토콜의 버전(v7.5.0)과 대상 프로젝트(응용프로그램)의 자체 버전은 완전히 별개입니다.  
+> 본 프로토콜의 버전(v7.6.0)과 대상 프로젝트(응용프로그램)의 자체 버전은 완전히 별개입니다.  
 > 에이전트는 프로젝트 착수 시 절대로 스킬의 버전 번호를 대상 소프트웨어의 버전이나 파일명에 투영하지 않으며, 대상 소프트웨어 고유의 버전 로드맵(SemVer 기본값 `v1.0.0`)을 독립적으로 유지합니다.
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v7.5.0)
+## 📂 저장소 및 모듈 구조 (v7.6.0)
 
 ```text
 ljack-skill/

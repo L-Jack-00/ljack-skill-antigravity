@@ -1,18 +1,18 @@
 # 엘잭 게임 프로토콜 (LJack Game Protocol)
-## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.6.0)
+## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.7.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-purple.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-1.6.0-green.svg)](#)
-[![Edition](https://img.shields.io/badge/Edition-Portability%20%26%20Commercial%20Ready-gold.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.7.0-green.svg)](#)
+[![Edition](https://img.shields.io/badge/Edition-Multi--Ref%20Art%20%26%20Economy%20Safety-gold.svg)](#)
 [![Engines](https://img.shields.io/badge/Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
-본 모듈은 게임 개발 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/소프트락/메모리/오디오)을 **헤드리스 1만 틱 시뮬레이터**로 자율 검증·치유하되,  
-최종 패키징 배포 전 **인게임 실시간 손맛 튜너(F1/F2 오버레이)를 통한 플레이 검수**, **상용 릴리즈 닥터(`game_release_doctor.py`)를 통한 세이브 원자성/다국어/오디오 안전망/UX카피 점검**, 그리고 **그래픽 실전 툴 나침반 및 벡터 에셋 빌더**를 완결하도록 규정하는 상용 게임 개발 프로토콜입니다.
+본 모듈은 게임 개발 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/소프트락/메모리/오디오)을 **헤드리스 1만 틱 & DOM E2E 시뮬레이터**로 자율 검증·치유하되,  
+최종 패키징 배포 전 **인게임 실시간 손맛 튜너(F1/F2 오버레이)를 통한 플레이 검수**, **상용 릴리즈 닥터(`game_release_doctor.py`)를 통한 세이브 원자성/즉시 커밋/다국어/오디오 안전망/UX카피 점검**, 그리고 **그래픽 실전 툴 나침반(멀티레퍼런스 AI·SVG 벡터·이원 배경 누끼) 및 벡터 에셋 빌더**를 완결하도록 규정하는 상용 게임 개발 프로토콜입니다.
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v1.6.0)
+## 📂 저장소 및 모듈 구조 (v1.7.0)
 
 ```text
 ljack-game/

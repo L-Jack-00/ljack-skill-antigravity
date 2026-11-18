@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.5.0] Release Sanitization & Artifact Rig
+[LJack Protocol v7.6.0] Release Sanitization & Artifact Rig
 =============================================================
 Wipes transient testing logs, cache artifacts, and temporary files
-prior to packaging, and enforces the `_internal/` data isolation rule.
+prior to packaging, enforces the `_internal/` data isolation rule,
+and optionally audits staging bundles (`--check-staging`) so raw AI caches
+(`_raw_cache`, `style_samples`, `workflows`, `temp`) and stale archives
+do not slip into distributable packages.
 
 Usage:
-    python release_cleaner.py <target_directory> [--dry-run]
+    python release_cleaner.py <target_directory> [--dry-run] [--check-staging]
 """
 
 import os
@@ -38,7 +41,35 @@ JUNK_DIRS = [
     ".coverage",
 ]
 
-def clean_artifacts(target_dir, dry_run=False):
+def check_staging_hygiene(target_dir):
+    warnings = []
+    for staging_name in ("dist-web", "_internal"):
+        assets_dir = os.path.join(target_dir, staging_name, "assets")
+        if os.path.isdir(assets_dir):
+            for leak in ("_raw_cache", "style_samples", "workflows", "temp"):
+                leak_path = os.path.join(assets_dir, leak)
+                if os.path.isdir(leak_path):
+                    warnings.append(f"Staging directory contains raw/temp folder: {os.path.relpath(leak_path, target_dir)}")
+
+    dist_dir = os.path.join(target_dir, "dist")
+    if os.path.isdir(dist_dir):
+        exes = [os.path.join(dist_dir, f) for f in os.listdir(dist_dir) if f.lower().endswith(".exe")]
+        zips = [os.path.join(dist_dir, f) for f in os.listdir(dist_dir) if f.lower().endswith(".zip")]
+        if exes and zips:
+            newest_exe = max(os.path.getmtime(p) for p in exes)
+            for zp in zips:
+                if os.path.getmtime(zp) + 300 < newest_exe:
+                    warnings.append(f"Stale release archive older than latest .exe: {os.path.relpath(zp, target_dir)}")
+
+    if warnings:
+        print("\n[STAGING ADVISORIES]:")
+        for w in warnings:
+            print(f"  - {w}")
+    else:
+        print("[PASS] Staging hygiene clean (no leaked raw asset caches or stale archives).")
+
+
+def clean_artifacts(target_dir, dry_run=False, check_staging=False):
     print("=" * 65)
     print(" [LJack Protocol] Release Sanitization & Artifact Rig")
     print("=" * 65)
@@ -76,10 +107,14 @@ def clean_artifacts(target_dir, dry_run=False):
     print("-" * 65)
     print(f"[SUMMARY] Removed {removed_files} junk files and {removed_dirs} cache directories.")
     print("[PASS] Release artifact sanitized. 0 test logs remaining.")
+    if check_staging:
+        check_staging_hygiene(target_dir)
     print("=" * 65)
     return 0
 
 if __name__ == "__main__":
-    target = sys.argv[1] if len(sys.argv) > 1 else "."
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    target = args[0] if args else "."
     dry = "--dry-run" in sys.argv
-    sys.exit(clean_artifacts(target, dry))
+    staging = "--check-staging" in sys.argv
+    sys.exit(clean_artifacts(target, dry, staging))

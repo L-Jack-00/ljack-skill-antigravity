@@ -1,19 +1,19 @@
 ---
 name: ljack-gamecode
 description: >-
-  엘잭 게임코드 프로토콜 (LJack GameCode Protocol, v1.0.0): 엄격한 계층 격리, 계약 선행(Contract-First),
-  외부 멀티모달 AI 에셋 브릿지 기반 TypeScript/HTML5 게임 아키텍처 하네스.
+  엘잭 게임코드 프로토콜 (LJack GameCode Protocol, v1.1.0): 엄격한 계층 격리, 계약 선행(Contract-First),
+  외부 멀티모달 AI 에셋 브릿지 기반 TypeScript/ESM 및 HTML5(Canvas/DOM) 게임 아키텍처 하네스.
   사용자가 'ljack-gamecode', '게임코드', '게임 코드 하네스', '레이어 격리', 'aiPromptHint', '에셋 매니페스트',
   '원자적 작업', 'Contract First', '스파게티 방지' 등을 요청하거나,
-  src/logic 내 브라우저 미디어 API 차단, 단계별 파일 격리 구현, 외부 AI 도구(PixelLab, Recraft, ElevenLabs, Suno 등) 프롬프트 연동 및
-  $O(1)$ 프로시저럴 폴백 기반의 견고한 TypeScript/HTML5 게임 아키텍처를 구축하고자 할 때 활성화합니다.
+  src/logic 내 브라우저 미디어 API 차단, 단계별 파일 격리 구현, 외부 AI 도구(Gemini Nano Banana/Batch, ComfyUI/SDXL, PixelLab, Recraft, ElevenLabs, Suno 등) 프롬프트 연동 및
+  $O(1)$ 프로시저럴 폴백 기반의 견고한 TypeScript/ESM HTML5 게임 아키텍처를 구축하고자 할 때 활성화합니다.
 ---
 
 # 엘잭 게임코드 프로토콜 (LJack GameCode Protocol)
-## 엄격 계층 격리 & 멀티모달 에셋 브릿지 TypeScript/HTML5 게임 하네스 (v1.0.0)
+## 엄격 계층 격리 & 멀티모달 에셋 브릿지 TypeScript/ESM·HTML5 게임 하네스 (v1.1.0)
 
 > **💡 시스템 지침 (System Directive)**:  
-> 본 프로토콜은 TypeScript/HTML5 게임 개발 시 **스파게티 코드 양산**, **`update()` 루프 내 렌더링/사운드 임의 하드코딩**, **장문 컨텍스트에서의 계층 혼재**를 원천 차단하기 위해 고안된 **제약 기반 아키텍처 하네스(Constraint-Driven Architecture Harness)**입니다.  
+> 본 프로토콜은 TypeScript/ESM(`.js + JSDoc`) 및 HTML5(Canvas + DOM/CSS 하이브리드) 게임 개발 시 **스파게티 코드 양산**, **`update()` 루프 내 렌더링/사운드 임의 하드코딩**, **장문 컨텍스트에서의 계층 혼재**를 원천 차단하기 위해 고안된 **제약 기반 아키텍처 하네스(Constraint-Driven Architecture Harness)**입니다.  
 > 
 > 상시 시스템 지침(`SYSTEM_PROMPT.md`)과 세션 초기화(`PROMPT_BOOTSTRAP.md`)로 이원화되어 작동하며, **계약 선행(Contract-First) ➔ 순수 로직(Pure Logic) ➔ 뷰 바인딩(View & Audio)**의 3단계 파이프라인을 엄격히 강제합니다.
 
@@ -48,22 +48,24 @@ description: >-
 
 | 디렉토리 / 파일 | 역할 및 제약 조건 |
 | :--- | :--- |
-| **`specs/types.ts`** | 전역 데이터 구조, 엔티티 상태, 이벤트 페이로드, 에셋 스키마 정의. **(모든 기능 구현 시 최우선 수정 대상)** |
-| **`specs/asset_manifest.json`** | 모든 그래픽/오디오 리소스의 `AssetID`, 경로, 규격, 외부 생성형 AI용 영문 프롬프트(`aiPromptHint`) 레지스트리. |
-| **`src/core/`** | `EventBus.ts`, `AssetHarness.ts`, 메인 루프 등 엔진 공통 인프라 계층. |
-| **`src/logic/`** | 순수 게임 규칙, 물리 연산, 수식, 상태 머신.<br>**[필수 제약]**: `window`, `document`, `CanvasRenderingContext2D`, `AudioContext`, `HTMLImageElement` 등 브라우저/DOM API 접근 불가 (헤드리스 Node 테스트 100% 호환 유지). |
-| **`src/view/`** | `src/logic/`의 상태를 읽어 Canvas에 렌더링하고 `EventBus`를 구독하여 `AssetHarness` 사운드를 재생하는 뷰 계층. |
+| **`specs/types.ts`** | 전역 데이터 구조, 엔티티 상태, 이벤트 페이로드, **영속 UI 메타데이터(`visitedFlags`, `saveRequiredEvents`)**, 에셋 스키마 정의. (ESM `.js` 프로젝트는 `.d.ts` + JSDoc 활용) **(최우선 수정 대상)** |
+| **`specs/asset_manifest.json`** | 모든 그래픽/오디오 리소스의 `AssetID`, 경로, 규격, 외부 AI 프롬프트(`aiPromptHint`) 및 선택 메타(`styleRef`, `characterRef`, `backdropColor`, `cutoutMode`, `forbiddenMotifs`, `rawCachePath`) 레지스트리. |
+| **`src/core/`** | `EventBus.ts`, `AssetHarness.ts`, 메인 루프 등 엔진 공통 인프라 계층 (TS/ESM `.js` 호환). |
+| **`src/logic/`** | 순수 게임 규칙, 물리 연산, 수식, 상태 머신.<br>**[필수 제약]**: `window`, `document`, `CanvasRenderingContext2D`, `AudioContext`, `HTMLImageElement` 등 브라우저/DOM API 접근 불가 (헤드리스 Node/Deno 테스트 100% 호환 유지). |
+| **`src/view/`** | `src/logic/`의 상태를 읽어 Canvas 또는 DOM/CSS UI에 렌더링하고 `EventBus`를 구독하여 `AssetHarness` 사운드를 재생하는 뷰 계층. |
 
 ---
 
 ## 3. 외부 멀티모달 AI 에셋 브릿지 규약
 
-새로운 시각/청각 요소가 필요할 때 뷰 코드에 도형이나 파일 경로를 임의 하드코딩하지 않고, 반드시 `specs/asset_manifest.json`에 아래 규격의 영문 프롬프트(`aiPromptHint`)를 선행 등록합니다.
+새로운 시각/청각 요소가 필요할 때 뷰 코드에 도형이나 파일 경로를 임의 하드코딩하지 않고, 반드시 `specs/asset_manifest.json`에 아래 규격의 영문 프롬프트(`aiPromptHint`) 및 참조·누끼 메타를 선행 등록합니다.
 
+- **`portrait` / `illustration` / `logo` (예: Gemini Nano Banana · Batch API / SDXL + ComfyUI)**:
+  - 필수/권장 항목: 구도(`3:4 waist-up`), `backdropColor`(`#FFFFFF` vs 흰색 의복·로고용 `#123466`), `cutoutMode`(`portrait`/`sticker`/`full_bleed_icon`), 바리에이션 시 `characterRef`/`styleRef`, 저작권·임의 별표 차단용 `forbiddenMotifs`, 원본 보존 `rawCachePath`.
 - **`sprite` / `spritesheet` (예: PixelLab / Scenario)**:
   - 필수 항목: 시점(Top-down, Side-view), 프레임 수, 해상도(`64x64`), 동작 서술, `transparent background, pixel art style`.
 - **`ui_vector` / `icon` (예: Recraft V3 / Midjourney / SVG)**:
-  - 필수 항목: 스타일(Vector/Flat), 테두리 규격, 팔레트, `clean game UI asset, isolated on dark background`.
+  - 필수 항목: 스타일(Vector/Flat), 테두리 규격, 팔레트, 풀블리드 앱 아이콘일 경우 `cutoutMode: "full_bleed_icon"`, 일반 UI 에셋은 `clean game UI asset, isolated on dark background`.
 - **`audio_sfx` (예: ElevenLabs Sound Effects)**:
   - 필수 항목: 타격 재질(Metallic, Flesh, Magic), 길이(`0.2s ~ 1.5s`), 특성(`crisp impact, zero reverb, retro arcade SFX`).
 - **`audio_bgm` (예: Suno / Udio)**:
@@ -88,7 +90,7 @@ description: >-
   src/view/에서 AssetHarness와 EventBus를 구독하여 바인딩 후 scripts/layer_guard.py 검증
 ```
 
-- **단계적 변경 규율**: 일반 기능 추가 및 리팩터링 시 한 번의 응답에서 변경/생성하는 파일은 **최대 2~3개(동일 계층 단위)**로 제한합니다. (초기 부트스트랩 4종 생성은 1단계 계약 2종 + 2단계 코어 2종으로 분할하거나 초기화 전용 일괄 생성으로 처리합니다.)
+- **단계적 변경 규율**: 일반 기능 추가 및 리팩터링 시 한 번의 응답에서 변경/생성하는 파일은 **최대 2~3개(동일 계층 단위)**로 제한합니다. (초기 부트스트랩 4종 생성은 1단계 계약 2종 + 2단계 코어 2종으로 분할하거나 초기화 전용 일괄 생성으로 처리하며, HTML 마크업 + 베이스 CSS + 멀티 테마 CSS가 분리된 DOM 하이브리드 뷰에서는 `계약+로직(2~3) ➔ 마크업+테마 CSS(3) ➔ 컨트롤러+테스트(2)` 분할을 허용합니다.)
 
 ---
 
@@ -108,9 +110,9 @@ description: >-
   4. `src/core/AssetHarness.ts`
 
 ### 3) 정적 계층 격리 가드 (`scripts/layer_guard.py`)
-`src/logic/` 내 브라우저 API 오염, `specs/asset_manifest.json`의 `aiPromptHint` 누락, `src/view/` 내 하드코딩된 `new Audio()` / raw 경로 사용을 0.1초 만에 자동 검사합니다:
+`src/logic/` 내 브라우저 API 오염, `specs/asset_manifest.json`(미존재 시 `assets/asset_manifest.json` 자동 탐색)의 `aiPromptHint` 및 확장 메타(`cutoutMode`, `backdropColor`, `forbiddenMotifs`, `styleRef`) 무결성, `src/view/` 내 하드코딩 경로·거대 단일 파일(1,200줄/100KB+) 분할 권고를 0.1초 만에 자동 검사합니다 (`--logic-dir`, `--view-dir`, `--manifest` 옵션으로 ESM `.js` 커스텀 디렉토리 구조도 지원):
 ```bash
-python scripts/layer_guard.py <project_directory> [--strict]
+python scripts/layer_guard.py <project_directory> [--logic-dir DIR] [--view-dir DIR] [--manifest PATH] [--strict]
 ```
 
 ---

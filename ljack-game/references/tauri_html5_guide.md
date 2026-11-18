@@ -57,3 +57,10 @@ node tests/test_sim_headless.js
   ```bash
   npm run build
   ```
+
+---
+
+### 5. Tauri 배포 스테이징 필터, 오프라인 폰트 & 아카이브 위생
+- **빌드 스테이징 제외 필터 (`prepare_tauri_dist`)**: 소스 저장소 내 `assets/_raw_cache`, `assets/temp`, `assets/style_samples`, `assets/workflows` 등 AI 생성 중간 산출물은 유지하되, Tauri `frontendDist`(`dist-web/`) 복사 단계에서 반드시 제외하여 `.exe` 용량 비대화를 막습니다.
+- **오프라인 로컬 폰트 번들링 & CSP**: 상용 데스크톱 배포에서는 외부 CDN(`fonts.googleapis.com` 등) 장애/오프라인 환경에서도 UI가 깨지지 않도록 핵심 폰트를 `assets/fonts/`에 로컬 번들링하는 것을 우선합니다.
+- **배포 폴더 아카이브 일치 검증**: 새 `.exe`를 `dist/`에 반영할 때는 실행 중 파일 잠금 여부를 확인하고, 구버전 `.zip` 아카이브가 남아 혼선되지 않도록 함께 갱신·정리합니다.

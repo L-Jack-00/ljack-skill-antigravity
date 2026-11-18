@@ -1,7 +1,7 @@
 ---
 name: ljack-game
 description: >-
-  엘잭 게임 프로토콜 (LJack Game Protocol): 멀티 엔진 런타임 하네스 엔지니어링 및 상용 인디 게임 개발 프로토콜 (v1.6.0).
+  엘잭 게임 프로토콜 (LJack Game Protocol): 멀티 엔진 런타임 하네스 엔지니어링 및 상용 인디 게임 개발 프로토콜 (v1.7.0).
   사용자가 '엘잭 게임', '게임 개발', '인디 게임', '게임 하네스', '상용화', '스팀 출시', 'Pygame', 'Tauri', 'HTML5 캔버스', '고도 엔진', 'Godot', 'Rust', 'Rust+Python' 등을 요청하거나,
   결정론적 고정 틱 루프, 헤드리스 1만 틱 시뮬레이터, 사용자 플레이 검수 관문(Playable Review Gate),
   인게임 실시간 손맛 튜너(F1/F2 오버레이), 원자적 세이브(Atomic Save), 다국어(i18n) 현지화 및 자동 치환, 상용 릴리즈 닥터,
@@ -10,7 +10,7 @@ description: >-
 ---
 
 # 엘잭 게임 스킬 (LJack Game Protocol)
-## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.6.0)
+## 멀티 엔진 런타임 하네스 & 상용 인디 게임 출시 프로토콜 (v1.7.0)
 
 > **💡 시스템 지침 (System Directive)**:  
 > 본 스킬은 인디 게임 제작 시 AI 에이전트가 기술적 결함(물리/충돌/터널링/메모리/오디오)을 헤드리스 1만 틱 시뮬레이터로 자율 검증·해결하되,  
@@ -20,7 +20,7 @@ description: >-
 > **4) 무결점 오디오 런타임 하네스(`references/audio_runtime_harness_guide.md`)를 통한 크래시 없는 사운드 파이프라인**을 완결하도록 규정하는 최상위 게임 개발 프로토콜입니다.
 
 > **⚠️ 버전 독립성 불변 원칙 (Version Independence Principle)**:  
-> **본 프로토콜의 버전(v1.6.0)과 대상 게임의 자체 버전은 완전히 별개입니다.**  
+> **본 프로토콜의 버전(v1.7.0)과 대상 게임의 자체 버전은 완전히 별개입니다.**  
 > 대상 게임은 사용자가 명시한 버전 또는 표준 SemVer 기본값(`v0.1.0` / `v1.0.0`)부터 온전히 독립적인 생명주기를 갖습니다.
 
 ---
@@ -49,21 +49,28 @@ description: >-
 ```
 
 - **기둥 1: 고정 틱과 렌더링 분리**: Pygame Dummy 가드, Tauri Accumulator 루프, Godot `_physics_process`, Rust 코어 + Python FFI 이원화 분리 (TypeScript/HTML5에서 엄격한 파일 계층 격리가 필요할 경우 `/ljack-gamecode` 규약과 함께 운용 가능).
-- **기둥 2: 헤드리스 1만 틱 시뮬레이터**: 렌더링 없이 1만 틱 이상을 오프라인으로 고속 실행해 무한 루프, NaN 오염, 메모리 누수, 승패 불변식을 검증.
+- **기둥 2: 헤드리스 1만 틱 & DOM E2E 검증**:
+  - 렌더링 없이 1만 틱 이상을 오프라인으로 고속 실행해 무한 루프, NaN 오염, 메모리 누수, 승패 불변식을 검증.
+  - HTML5/Tauri 등 웹 UI 게임에서는 코어 시뮬레이션에 더해 **헤드리스 브라우저 DOM E2E 검증(뷰 전환·모달·호버 프리뷰·0 console errors)**을 함께 수행.
 - **기둥 3: 입력 버퍼링 & 안전망**: 프레임 드랍 시 입력 씹힘 방지 및 게임 종료 시 물리 입력 해제.
-- **기둥 4: 충돌 감사 & Reachability Solver**:
+- **기둥 4: 충돌 감사, Reachability Solver & 경제 불변식**:
   - 플랫포머/액션: 투사체 관통 방지 서브스텝 및 도달 불가능 발판(`tick_sim_runner.py`) 수학적 사전 감지.
-  - 턴제/카드(TCG)/퍼즐: 드로우·자원 고갈, 턴 무한 루프 등 도메인별 소프트락(Softlock) 0건 시뮬레이션 검증.
-- **기둥 5: 게임 필(Game Feel) & 실시간 튜너**: 코요테 타임, 점프 선입력 버퍼, **인게임 실시간 손맛 튜너([F1] 오버레이, [F2] 핫저장)** 지원.
+  - 턴제/카드(TCG)/로그라이크: 드로우·자원 고갈, 턴 무한 루프, **상점 최소 재고(`stock >= 1`)·허브 전이 불변식** 등 소프트락/경제 붕괴 0건 시뮬레이션 검증.
+- **기둥 5: 게임 필(Game Feel), 실시간 튜너 & 서브 뷰 위생**:
+  - 코요테 타임, 점프 선입력 버퍼, **인게임 실시간 손맛 튜너([F1] 오버레이, [F2] 핫저장)** 및 `prefers-reduced-motion` 애니메이션 배려 지원.
+  - **서브 뷰 전환 위생(Sub-view Transition Hygiene)**: 팩 개봉 결과 배너, 호버 프리뷰 툴팁, NPC 감정 복귀 타이머는 뷰 이탈·재진입 시 반드시 초기화.
 - **기둥 6: 플레이어블 검수 관문 (Playable Review Gate)**:
   - 배포 전 사용자에게 로컬 실행 명령과 밸런스 파라미터 요약표를 제출하고 직접 손맛 검수 수렴.
-- **기둥 7: 세이브 데이터 원자적 안전망 (Atomic Save Rig)**:
+- **기둥 7: 세이브 데이터 원자성 & 경제 커밋 즉시 저장**:
   - 임시 파일 쓰기 및 `os.replace` 원자적 교체로 충돌/정전 시 세이브 파일 깨짐(Corruption) 방어.
-- **기둥 8: 다국어 & 상용 릴리즈 봉인 (Commercial Release Rig)**:
+  - **세이브스커밍/유실 방어**: 카드팩 개봉·단품 구매·거래·덱 저장·이벤트 선택 등 모든 랜덤/경제 커밋 직후 디바운스를 기다리지 않고 **즉시 동기 저장(`saveRunNow()`)**하고, `beforeunload`/`pagehide`에도 플러시 가드를 연결.
+- **기둥 8: 다국어, 아이콘 분리 & 상용 릴리즈 봉인 (Commercial Release Rig)**:
   - `locales/` 다국어 사전 탑재, 상용 빌드 시 `F1` 손맛 튜너 자동 봉인(`PRODUCTION_BUILD=True`), **독자 중심 문서화(README/주석 내 변경점 찌꺼기 배제)**, 스팀/웹/데스크톱 배포 패키징 지원 (스팀 AppID 및 SDK 연동은 개발자 자격 정보 제공 시 활성화).
+  - **앱 아이콘 vs 인게임 심볼 분리**: 데스크톱/창 아이콘(`app_icon.png`, `src-tauri/icons/*`, 풀블리드 `1024x1024` 무여백 원본)과 인게임 카드 뒷면/문장 SVG를 분리 관리.
 - **기둥 9: 🎨 그래픽 실전 툴 나침반 (Game Art Toolchain Compass)**:
   - UI/프레임/뱃지는 **Figma / SVG 벡터**로 가볍고 깨짐 없게 구축 (내장 `scripts/vector_asset_builder.py` 즉시 활용 가능).
-  - 캐릭터/배경 원화는 **SDXL 1.0 + ComfyUI**로 가운데 일러스트에만 분리 투입.
+  - 캐릭터/배경 원화 및 NPC 표정 바리에이션(`Base->Excited/Tired/Deal`)은 **Gemini 멀티레퍼런스 이미지 모델 / Batch API** 또는 **SDXL 1.0 + ComfyUI**로 가운데 일러스트에만 분리 투입.
+  - **누끼·비용·IP 실전 규율**: `#FFFFFF` vs `#123466` 이원 배경으로 흰색 의복/스티커 경계 보존, `#479be6` 보색 시트 검수, IP 금칙 모티프·임의 레벨 별표 차단, 무료 등급 이미지 차단(`limit: 0`) 확인 및 500장 이상 대량 생성 시 Batch API(50% 절감)·SDXL 하이브리드 적용.
   - 2D 도트 스프라이트는 **SD 1.5 + Pixel LoRA ➡️ Aseprite**로 격자 통일.
   - 회전/발광 이펙트는 **게임 엔진 2D 셰이더**로 경량 동적 구현.
   - *외부 이미지 생성 툴이 없는 로컬 코딩 환경에서는 SVG/프로시저럴 플레이스홀더와 에셋 ID 분리 구조로 우선 구현한 뒤 추후 최종 아트로 교체합니다.*
@@ -77,7 +84,7 @@ description: >-
 
 ## 2. 자율 게임 에이전트 12대 실행 강령
 
-1. **버전 독립성 준수**: 게임 프로토콜 버전(v1.6.0)과 대상 게임 고유 버전(`v0.1.0`)을 분리한다.
+1. **버전 독립성 준수**: 게임 프로토콜 버전(v1.7.0)과 대상 게임 고유 버전(`v0.1.0`)을 분리한다.
 2. **엔진 생태계 적응력**: Pygame, Tauri/HTML5, Godot 4.x, Rust+Python Hybrid 중 사용자가 요청한 스택의 표준 하네스를 즉각 구축한다.
 3. **기술 결함은 무중단 자가 치유한다**: 충돌 버그, 맵 차단, 무한 루프는 사용자에게 묻지 않고 헤드리스 시뮬레이션 러너로 스스로 해결한다.
 4. **손맛과 재미는 반드시 사용자에게 검수받는다 (Playable Review Gate)**: 배포 전 로컬 실행 스크립트와 밸런스 수치 요약표를 사용자에게 제출하고 직접 플레이 검수를 요청한다.
@@ -135,7 +142,7 @@ description: >-
 ### 🛠️ 내장 스크립트 도구 (`scripts/`)
 - `scripts/vector_asset_builder.py`: 초경량 SVG 카드 프레임 및 뱃지 빌더 (comic 카툰풍 / metallic 메탈릭풍 지원).
 - `scripts/game_scaffolder.py`: Pygame, Tauri, Godot, Rust+Python Hybrid 10대 기둥 골격 즉시 생성.
-- `scripts/game_release_doctor.py`: 상용 출시 준비도(0~100), 오디오 안전망, UX 카피 무결성 및 스토어 승인 게이트 정적 진단 닥터.
+- `scripts/game_release_doctor.py`: 상용 출시 준비도(0~100), Tauri/웹 클라이언트 저장·오디오 안전망, 풀블리드 아이콘·모션 배려·스테이징 캐시 누수·UX 카피 정적 진단 닥터.
 - `scripts/localization_linter.py`: 다국어(i18n) 번역 무결성 감사, `--strict` CI 게이트, `--rewrite` 기반 원본 소스 코드 인플레이스 자동 치환(`t("KEY")`) 및 런타임 헬퍼 스캐폴딩 도구.
 - `scripts/tick_sim_runner.py`: Reachability Solver 및 헤드리스 1만 틱 고속 시뮬레이터.
 - `scripts/play_preview_launcher.py`: 엔진 자동 감지 기반 플레이 검수 브리핑 도구.
@@ -161,8 +168,12 @@ description: >-
 - **v1.3.0**: 원자적 세이브 안전망 (Atomic Save Rig), 상용 릴리즈 닥터 (`game_release_doctor.py`), 다국어(i18n) 린터 (`localization_linter.py`), 스팀 상용 출시 레퍼런스.
 - **v1.4.0**: **기둥 9(그래픽 실전 툴 나침반)** 정립 및 초경량 SVG 벡터 에셋 빌더 (`vector_asset_builder.py`) 탑재.
 - **v1.5.0**: **기둥 10(오디오 안전망)**, Rust+Python Hybrid 이원화 게임 가이드, `localization_linter.py --rewrite` 인플레이스 치환기 탑재.
-- **v1.6.0 (Current - Portability & Consistency Polish Edition)**:
+- **v1.6.0**:
   - **상대 경로 이식성 완결**: `SKILL.md` 내 로컬 절대 경로 제거 및 상대 경로 표준화.
   - **플레이어 표면 UX 카피 일관성 개선**: `web_packager.py`의 사용자 노출 HTML에서 내부 프로토콜/하네스 용어 제거.
   - **CI 엄격 검증 지원**: `localization_linter.py`의 `--strict` 종료 코드 지원 및 데드 코드 제거.
   - **비플랫포머 및 오프라인 에셋 폴백 명시**: 턴제/TCG 소프트락 검사 및 외부 AI 에셋 툴 부재 시 SVG/프로시저럴 선행 구축 규약 정립.
+- **v1.7.0 (Current - Multi-Ref Art Pipeline, Economy Commit & DOM E2E Edition)**:
+  - **멀티레퍼런스 AI 그래픽 & 비용/누끼 실전 가이드**: Gemini 멀티레퍼런스 표정 변형(`Base->Mood`), `#FFFFFF`/`#123466` 이원 배경 및 `#479be6` 검수, IP 금칙어·무료 티어 차단 경고, 500장+ Batch API(50% 할인)/SDXL 하이브리드 전략 수록.
+  - **로그라이크 경제 무결성 & 뷰 전환 위생**: 랜덤/경제 커밋 즉시 동기 저장(세이브스커밍 방어), `stock >= 1` 상점 불변식, 서브 뷰 이탈 시 잔존 배너/툴팁 정리 의무화.
+  - **데스크톱 앱 아이콘 분리, 모션 배려 & DOM E2E**: `1024x1024` 풀블리드 아이콘과 인게임 벡터 분리, `prefers-reduced-motion` 확인 및 `game_release_doctor.py` 어드바이저리 확장.

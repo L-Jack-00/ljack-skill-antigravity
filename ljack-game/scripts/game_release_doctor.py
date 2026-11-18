@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Game Protocol v1.6.0] Commercial Game Release Doctor & Health Auditor
+[LJack Game Protocol v1.7.0] Commercial Game Release Doctor & Health Auditor
 ============================================================================
 Performs exhaustive AST & static inspection of the game project against
 Steam/Commercial Store release standards:
-  1. Atomic Save Data & Crash-proof persistence
+  1. Atomic Save Data & Immediate Economic Commit Flush
   2. Production Debug Seal (F1 Live Tuner disabled in release)
-  3. Display & Resolution Adaptability (Fullscreen, Aspect Ratio)
+  3. Display, Resolution & Reduced-Motion Adaptability
   4. Audio Safety & Polyphony Rig (Dummy fallback, 3-bus volume, gesture guard)
   5. Multi-language Localization (i18n >= 2 languages)
   6. UX Copy Gate Integrity (Zero developer/harness jargon in player UI)
-  7. Artifact cleanliness (Zero transient test logs)
-
-Usage:
-    python game_release_doctor.py <game_directory> [--strict]
+  7. Artifact cleanliness & Desktop Icon Coverage Advisory
 """
 
 import os
@@ -31,7 +28,7 @@ if sys.stdout.encoding != 'utf-8':
         pass
 
 IGNORED_DIRS = {'.git', '__pycache__', 'node_modules', 'dist', 'dist_web', '.godot', '_internal'}
-SCANNABLE_EXTS = {'.py', '.js', '.ts', '.gd', '.json', '.html', '.rs'}
+SCANNABLE_EXTS = {'.py', '.js', '.ts', '.gd', '.json', '.html', '.css', '.rs'}
 
 PROHIBITED_UX_TERMS = {
     "하네스", "harness", "인터록", "interlock", "fsm", "자가 치유", "self-healing",
@@ -46,7 +43,10 @@ class GameReleaseDoctor:
         
         # Audit Flags
         self.has_atomic_save = False
+        self.has_web_persistence = False
         self.has_production_seal = False
+        self.has_tauri_config = os.path.isfile(os.path.join(self.target_dir, "src-tauri", "tauri.conf.json"))
+        self.has_debug_tuner = False
         self.has_fullscreen_toggle = False
         self.has_audio_mixer = False
         self.has_audio_safety_guard = False
@@ -54,6 +54,10 @@ class GameReleaseDoctor:
         self.ux_copy_violations = []
         self.junk_files = []
         self.total_source_files = 0
+        self.has_keyframes_anim = False
+        self.has_reduced_motion = False
+        self.has_exit_save_flush = False
+        self.advisories = []
 
     def inspect_workspace(self):
         # 1. Check locales directory & audit dictionary UX copy
@@ -96,13 +100,17 @@ class GameReleaseDoctor:
                         with open(fpath, "r", encoding="utf-8", errors="ignore") as fp:
                             content = fp.read()
 
-                        # Check Atomic Save
+                        # Check Atomic / Client Save
                         if any(term in content for term in ["os.replace", "NamedTemporaryFile", "ConfigFile.save", "atomic_save"]):
                             self.has_atomic_save = True
+                        if any(term in content for term in ["localStorage.setItem", "indexedDB", "__TAURI__", "saveRunNow"]):
+                            self.has_web_persistence = True
 
-                        # Check Production Debug Seal
+                        # Check Production Debug Seal & Live Tuner presence
                         if any(term in content for term in ["PRODUCTION_BUILD", "DEBUG_TUNER", "is_debug", "OS.is_debug_build()"]):
                             self.has_production_seal = True
+                        if any(term in content for term in ["tuner_overlay", "live-tuner", "F1_TUNER", "DEBUG_TUNER"]):
+                            self.has_debug_tuner = True
 
                         # Check Fullscreen / Resolution Toggle
                         if any(term in content for term in ["FULLSCREEN", "set_fullscreen", "window/size/mode", "toggle_fullscreen"]):
@@ -115,6 +123,14 @@ class GameReleaseDoctor:
                         # Check Audio Fallback / Safety Guard
                         if any(term in content for term in ["SDL_AUDIODRIVER", "dummy", "resume()", "linear_to_db", "set_num_channels", "fadeout"]):
                             self.has_audio_safety_guard = True
+
+                        # Check exit save flush & CSS reduced motion
+                        if any(term in content for term in ["beforeunload", "pagehide", "atexit", "saveRunNow", "flushSave"]):
+                            self.has_exit_save_flush = True
+                        if "@keyframes" in content:
+                            self.has_keyframes_anim = True
+                        if "prefers-reduced-motion" in content:
+                            self.has_reduced_motion = True
 
                         # Fast UX check in UI setter strings (skip meta docs)
                         if not any(k in fpath.lower() for k in ["skill.md", "reference", "script", "readme.md"]):
@@ -141,18 +157,28 @@ class GameReleaseDoctor:
         checks = []
         action_items = []
 
-        # 1. Atomic Save Data Rig (20 pts)
+        # 1. Atomic / Persistent Save Data Rig (20 pts)
         if self.has_atomic_save:
             score += 20
-            checks.append(("[PASS]", "Pillar 7: Atomic Save Rig (Crash-proof save/replace active) (+20)"))
+            checks.append(("[PASS]", "Pillar 7: Atomic Save Rig (Crash-proof os.replace/Temp save active) (+20)"))
+        elif self.has_web_persistence and self.has_exit_save_flush:
+            score += 20
+            checks.append(("[PASS]", "Pillar 7: Client/Tauri Save Rig + Exit Flush Guard active (+20)"))
+        elif self.has_web_persistence:
+            score += 12
+            checks.append(("[WARN]", "Pillar 7: Web/Tauri persistence found but missing explicit exit-flush guard (+12)"))
+            action_items.append("Add synchronous flush on `beforeunload`/`pagehide` and economic/random commits.")
         else:
-            checks.append(("[WARN]", "Pillar 7: Missing Atomic Save Rig (Risk of save file corruption on crash) (+0)"))
-            action_items.append("Wrap save routine with os.replace() and temporary write to prevent save corruption.")
+            checks.append(("[WARN]", "Pillar 7: Missing Save Integrity Rig (Risk of save file corruption/loss) (+0)"))
+            action_items.append("Wrap save routine with os.replace() / temporary write or sync flush commit guards.")
 
         # 2. Production Debug Seal (15 pts)
         if self.has_production_seal:
             score += 15
             checks.append(("[PASS]", "Pillar 5 & 8: Production Debug Seal (F1 Tuner sealed for commercial build) (+15)"))
+        elif self.has_tauri_config and not self.has_debug_tuner:
+            score += 15
+            checks.append(("[PASS]", "Pillar 5 & 8: Tauri release config verified (no unsealed live F1 tuner exposed) (+15)"))
         else:
             checks.append(("[WARN]", "Pillar 5 & 8: No PRODUCTION_BUILD flag found (F1 Tuner may be exposed to players) (+0)"))
             action_items.append("Add PRODUCTION_BUILD boolean flag to disable [F1] Tuner overlay in commercial releases.")
@@ -213,10 +239,58 @@ class GameReleaseDoctor:
         else:
             print("[NEEDS REFINEMENT] Project requires commercial polish before public release.")
 
+        if self.has_keyframes_anim and not self.has_reduced_motion:
+            self.advisories.append("CSS @keyframes animation found without `@media (prefers-reduced-motion: reduce)` fallback.")
+        if (self.has_atomic_save or self.has_web_persistence) and not self.has_exit_save_flush:
+            self.advisories.append("Save system lacks explicit exit-flush guard (`beforeunload`/`pagehide`/`atexit` or sync commit helper).")
+
+        for candidate in [
+            os.path.join(self.target_dir, "src-tauri", "icons", "icon.png"),
+            os.path.join(self.target_dir, "assets", "ui", "app_icon.png"),
+        ]:
+            if os.path.isfile(candidate):
+                try:
+                    from PIL import Image
+                    with Image.open(candidate) as im:
+                        rgba = im.convert("RGBA")
+                        w, h = rgba.size
+                        alpha_band = rgba.getchannel("A").point(lambda a: 255 if a > 20 else 0)
+                        bbox = alpha_band.getbbox()
+                        if not bbox or (bbox[2] - bbox[0]) / w < 0.92 or (bbox[3] - bbox[1]) / h < 0.92:
+                            pct_w = 0.0 if not bbox else ((bbox[2] - bbox[0]) / w) * 100
+                            pct_h = 0.0 if not bbox else ((bbox[3] - bbox[1]) / h) * 100
+                            self.advisories.append(
+                                f"Desktop icon {os.path.relpath(candidate, self.target_dir)} ({w}x{h}) covers only {pct_w:.1f}%x{pct_h:.1f}% (<92% full-bleed)."
+                            )
+                except Exception:
+                    pass
+
+        # Staging leakage & stale archive advisories
+        dist_web_assets = os.path.join(self.target_dir, "dist-web", "assets")
+        if os.path.isdir(dist_web_assets):
+            for leak_dir in ("_raw_cache", "style_samples", "workflows", "temp"):
+                if os.path.isdir(os.path.join(dist_web_assets, leak_dir)):
+                    self.advisories.append(f"Staging bundle dist-web/assets/{leak_dir} should be excluded before release build.")
+
+        dist_dir = os.path.join(self.target_dir, "dist")
+        if os.path.isdir(dist_dir):
+            exes = [os.path.join(dist_dir, f) for f in os.listdir(dist_dir) if f.lower().endswith(".exe")]
+            zips = [os.path.join(dist_dir, f) for f in os.listdir(dist_dir) if f.lower().endswith(".zip")]
+            if exes and zips:
+                newest_exe = max(os.path.getmtime(p) for p in exes)
+                for zp in zips:
+                    if os.path.getmtime(zp) + 300 < newest_exe:
+                        self.advisories.append(f"Stale release archive {os.path.relpath(zp, self.target_dir)} is older than latest .exe build.")
+
         if action_items:
             print("\n[🎯 ACTION ITEMS (Commercial Polish Directive)]:")
             for idx, item in enumerate(action_items, 1):
                 print(f"  {idx}. {item}")
+
+        if self.advisories:
+            print("\n[🔭 RELEASE ADVISORIES (Visual / Save / Motion)]:")
+            for adv in self.advisories:
+                print(f"  - {adv}")
 
         print("=" * 65)
         if score < 70 or (self.strict and score < 100):

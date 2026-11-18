@@ -1,22 +1,22 @@
 # LJack GameCode 아키텍처 명세 및 참조 구현
 
 ## 1. 개요 및 설계 의도
-`ljack-gamecode` 프로토콜은 TypeScript/HTML5 기반 게임 개발 과정에서 AI 에이전트나 개발자가 스파게티 코드를 양산하거나, 순수 게임 로직에 브라우저 렌더링/오디오 API가 침투하거나, 임의의 도형/사운드를 무분별하게 하드코딩하는 현상을 차단하기 위해 설계되었습니다.
+`ljack-gamecode` 프로토콜은 TypeScript/ESM(`.js + JSDoc` 포함) 및 HTML5(Canvas + DOM/CSS 하이브리드) 기반 게임 개발 과정에서 AI 에이전트나 개발자가 스파게티 코드를 양산하거나, 순수 게임 로직에 브라우저 렌더링/오디오 API가 침투하거나, 임의의 도형/사운드를 무분별하게 하드코딩하는 현상을 차단하기 위해 설계되었습니다.
 
 ### 핵심 제약 3대 원칙
 1. **레이어 강제 격리 (Layer Isolation Guard)**:
-   - `specs/types.ts`: 전역 타입 계약.
-   - `specs/asset_manifest.json`: 에셋 메타데이터 및 AI 프롬프트 힌트.
+   - `specs/types.ts` (또는 JSDoc 계약): 전역 타입 및 UI 영속/마일스톤 메타데이터 계약.
+   - `specs/asset_manifest.json`: 에셋 메타데이터, AI 프롬프트 힌트(`aiPromptHint`) 및 멀티레퍼런스/누끼 명세.
    - `src/core/`: `EventBus`, `AssetHarness` 등 엔진 기반 인프라.
-   - `src/logic/`: 순수 게임 로직 (`scripts/layer_guard.py` 정적 린터로 브라우저/DOM API 오염 차단).
-   - `src/view/`: 렌더러 및 오디오 컨트롤러.
+   - `src/logic/`: 순수 게임 로직 (`scripts/layer_guard.py` 정적 린터로 브라우저/DOM API 오염 차단; `--logic-dir` 지정으로 ESM `.js` 모듈도 동일 검사 가능).
+   - `src/view/`: Canvas/DOM 렌더러, 테마 CSS 및 오디오 컨트롤러.
 2. **에셋 브릿지 자동화 (AI Prompt Hint Injection)**:
    - 뷰 코드 내 `new Audio("assets/...")` 직접 생성 및 `ctx.fillRect` 임시 그래픽 남발 금지.
-   - `specs/asset_manifest.json`에 `aiPromptHint`(PixelLab, Recraft, ElevenLabs, Suno 등 타깃) 선행 등록.
+   - `specs/asset_manifest.json`에 `aiPromptHint`(Gemini Nano Banana/Batch API, ComfyUI/SDXL, PixelLab, Recraft, ElevenLabs, Suno 등 타깃)와 선택 메타(`styleRef`, `characterRef`, `backdropColor`, `cutoutMode`, `forbiddenMotifs`, `rawCachePath`) 선행 등록.
    - 실제 에셋 파일이 준비되면 즉시 로드하며, 누락/로딩 중일 때는 `AssetHarness`가 $O(1)$ 프로시저럴(마젠타 체크보드 / Web Audio 감쇠 사인파) 폴백을 자동 공급.
 3. **단계별 원자적 변경 (Staged Atomic Mutation)**:
-   - 일반 기능 구현 시 단일 단계에서 최대 2~3개 파일로 변경 범위를 제한하여 회귀 방지.
-   - 계약(`specs/types.ts`, `specs/asset_manifest.json`) 선행 갱신 ➔ 순수 로직(`src/logic/`) ➔ 뷰/오디오 바인딩(`src/view/`) 3단계 준수.
+   - 순수 로직 및 계약 단계에서는 한 번에 **최대 2~3개 파일**로 변경 범위를 제한하여 회귀 방지.
+   - **DOM + 멀티 테마 CSS 뷰 예외 규율**: 마크업(`index.html`), 베이스 CSS(`styles.css`), 테마 CSS(`theme_*.css`)가 물리적으로 분리된 경우 계약+로직(2~3파일) ➔ 마크업+테마 CSS(3파일) ➔ 컨트롤러+테스트(2파일) 순으로 기능 단위 원자 커밋을 허용.
 
 ---
 
@@ -24,7 +24,17 @@
 
 ### 2.1 `specs/types.ts`
 ```typescript
-export type AssetType = 'sprite' | 'spritesheet' | 'ui_vector' | 'audio_sfx' | 'audio_bgm';
+export type AssetType =
+  | 'sprite'
+  | 'spritesheet'
+  | 'portrait'
+  | 'illustration'
+  | 'logo'
+  | 'ui_vector'
+  | 'audio_sfx'
+  | 'audio_bgm';
+
+export type CutoutMode = 'portrait' | 'sticker' | 'full_bleed_icon' | 'none';
 
 export interface SpriteMetadata {
   frameWidth: number;
@@ -45,6 +55,12 @@ export interface AssetEntry {
   type: AssetType;
   path: string;
   aiPromptHint: string;
+  backdropColor?: string;
+  cutoutMode?: CutoutMode;
+  styleRef?: string;
+  characterRef?: string;
+  forbiddenMotifs?: string[];
+  rawCachePath?: string;
   spriteMeta?: SpriteMetadata;
   audioMeta?: AudioMetadata;
 }
@@ -52,6 +68,15 @@ export interface AssetEntry {
 export interface AssetManifest {
   version: string;
   assets: Record<string, AssetEntry>;
+}
+
+/**
+ * UI 뱃지("NEW!"), 라운드별 확인 플래그, 즉시 동기 저장이 필요한 마일스톤도
+ * 뷰 전역 변수에 흩뿌리지 않고 계약 스키마에서 관리합니다.
+ */
+export interface PersistentUiMetadata {
+  shopVisitedRound: number | null;
+  saveRequiredEvents: Array<'PACK_OPEN' | 'CARD_BUY' | 'TRADE' | 'DECK_SAVE' | 'DESTINY_CHOICE'>;
 }
 
 export interface GameEventMap {

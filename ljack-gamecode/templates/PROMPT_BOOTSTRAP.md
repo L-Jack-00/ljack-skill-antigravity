@@ -3,11 +3,13 @@
 
 ### 생성할 파일 목록 및 상세 스펙
 
-1. `specs/types.ts`
-   - `AssetType`: `'sprite' | 'spritesheet' | 'ui_vector' | 'audio_sfx' | 'audio_bgm'`
+1. `specs/types.ts` (Vanilla ESM 프로젝트는 JSDoc + `.d.ts` 병행 가능)
+   - `AssetType`: `'sprite' | 'spritesheet' | 'portrait' | 'illustration' | 'logo' | 'ui_vector' | 'audio_sfx' | 'audio_bgm'`
+   - `CutoutMode`: `'portrait' | 'sticker' | 'full_bleed_icon' | 'none'`
    - `SpriteMetadata`: `{ frameWidth: number; frameHeight: number; frameCount: number; fps: number; pivot: { x: number; y: number } }`
    - `AudioMetadata`: `{ volume: number; loop: boolean; pitchVariance?: number }`
-   - `AssetEntry`: `{ id: string; type: AssetType; path: string; aiPromptHint: string; spriteMeta?: SpriteMetadata; audioMeta?: AudioMetadata }`
+   - `AssetEntry`: `{ id: string; type: AssetType; path: string; aiPromptHint: string; backdropColor?: string; cutoutMode?: CutoutMode; styleRef?: string; characterRef?: string; forbiddenMotifs?: string[]; rawCachePath?: string; spriteMeta?: SpriteMetadata; audioMeta?: AudioMetadata }`
+   - `PersistentUiMetadata`: `{ shopVisitedRound: number | null; saveRequiredEvents: string[] }`
    - `AssetManifest`: `{ version: string; assets: Record<string, AssetEntry> }`
    - `GameEventMap`: 이벤트 버스에서 사용할 기본 이벤트 페이로드 인터페이스 (`PLAY_SFX`, `PLAY_BGM`, `ENTITY_DAMAGED`, `STATE_CHANGED`)
 

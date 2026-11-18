@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack Protocol v7.5.0] Runtime Harness Static Doctor & Health Checker
+[LJack Protocol v7.6.0] Runtime Harness Static Doctor & Health Checker
 ======================================================================
 Performs fast AST & static inspection of the target project
 to score compliance with the LJack 10 Pillars (I/O Decoupling, FSM,
@@ -26,13 +26,14 @@ if sys.stdout.encoding != 'utf-8':
     except Exception:
         pass
 
-IGNORED_DIRS = {'.git', '.svn', '__pycache__', 'node_modules', '.idea', '.vscode', 'venv', 'env', '_internal'}
+IGNORED_DIRS = {'.git', '.svn', '__pycache__', 'node_modules', '.idea', '.vscode', 'venv', 'env', '_internal', 'dist', 'dist-web', 'target'}
 
 class HarnessDoctor:
     def __init__(self, root_dir: str, strict: bool = False):
         self.root_dir = os.path.abspath(root_dir)
         self.strict = strict
         self.py_files = []
+        self.web_files = []
         self.test_files = []
         self.junk_files = []
         
@@ -44,6 +45,7 @@ class HarnessDoctor:
         self.has_busy_waiting_antipattern = False
         self.has_headless_tests = False
         self.has_cleanup_finally = False
+        self.advisories = []
 
     def collect_files(self):
         for root, dirs, files in os.walk(self.root_dir):
@@ -63,6 +65,10 @@ class HarnessDoctor:
                         self.test_files.append(fpath)
                     else:
                         self.py_files.append(fpath)
+                elif f.endswith((".js", ".ts", ".mjs", ".css")):
+                    rel = os.path.relpath(fpath, self.root_dir).lower()
+                    if not ("test" in rel or lower_f.startswith("test_")):
+                        self.web_files.append(fpath)
 
     def analyze_ast(self):
         for fpath in self.py_files:
@@ -71,6 +77,20 @@ class HarnessDoctor:
                     content = f.read()
             except Exception:
                 continue
+
+            line_count = content.count("\n") + 1
+            rel_path = os.path.relpath(fpath, self.root_dir)
+            if line_count > 1200:
+                self.advisories.append(
+                    f"Modularity hint: {rel_path} is {line_count} lines; consider splitting controllers/adapters."
+                )
+
+            if any(term in content for term in ["debounce", "threading.Timer", "schedule_save"]) and not any(
+                term in content for term in ["flush", "atexit", "beforeunload", "pagehide", "save_now"]
+            ):
+                self.advisories.append(
+                    f"Persistence race hint: {rel_path} uses debounced/timer writes without explicit flush/exit hook."
+                )
 
             # 1. UTF-8 Guard check
             if "reconfigure(encoding='utf-8')" in content or "reconfigure(encoding=\"utf-8\")" in content:
@@ -110,6 +130,28 @@ class HarnessDoctor:
 
         if self.test_files:
             self.has_headless_tests = True
+
+        # Multi-language (JS/TS/CSS) advisory scan for oversized controllers & un-flushed timers
+        for fpath in self.web_files:
+            try:
+                with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+            except Exception:
+                continue
+            line_count = content.count("\n") + 1
+            rel_path = os.path.relpath(fpath, self.root_dir)
+            if line_count > 1200:
+                self.advisories.append(
+                    f"Modularity hint: {rel_path} is {line_count} lines; consider splitting controllers/stylesheets."
+                )
+            if fpath.endswith((".js", ".ts", ".mjs")) and any(
+                term in content for term in ["debounce", "scheduleSave", "setTimeout"]
+            ) and ("localStorage" in content or "writeFile" in content) and not any(
+                term in content for term in ["beforeunload", "pagehide", "flush", "saveRunNow"]
+            ):
+                self.advisories.append(
+                    f"Persistence race hint: {rel_path} uses delayed writes without explicit flush/exit hook."
+                )
 
     def run_checkup(self) -> int:
         print("=" * 65)
@@ -193,6 +235,11 @@ class HarnessDoctor:
                 print(f"  {idx}. {item}")
         else:
             print("[EXCELLENT] Project meets 100% of LJack Protocol Core Harness criteria.")
+
+        if self.advisories:
+            print("\n[🔭 ARCHITECTURAL ADVISORIES (Blind-Spot Radar)]:")
+            for adv in self.advisories:
+                print(f"  - {adv}")
 
         print("=" * 65)
 
