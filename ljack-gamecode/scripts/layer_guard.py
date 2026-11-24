@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-[LJack GameCode Protocol v1.1.0] Static Layer Isolation & Manifest Guard
+[LJack GameCode Protocol v1.2.0] Static Layer Isolation & Anti-Stub Guard
 ========================================================================
 Zero-dependency static verifier for LJack GameCode projects:
   1. Layer Isolation Guard: Ensures pure logic directory (default `src/logic/`)
@@ -14,6 +14,8 @@ Zero-dependency static verifier for LJack GameCode projects:
   3. Hardcoded Asset Path Guard: Flags direct `new Audio(...)` or raw
      `"assets/..."` references inside view directory (`src/view/`) that
      bypass `AssetHarness`.
+  4. Anti-Stub Guard: Detects unfinished `TODO`/`FIXME`/`NotImplemented` markers
+     in `src/logic/` and `src/view/` so incomplete milestones are caught early.
 
 Usage:
     python layer_guard.py <project_directory> [--logic-dir DIR] [--view-dir DIR] [--manifest PATH] [--strict]
@@ -46,9 +48,35 @@ VIEW_HARDCODE_PATTERNS = [
     (re.compile(r'["\']assets/[^"\']+["\']'), "Raw asset file path literal in src/view/; use AssetID key with AssetHarness"),
 ]
 
+STUB_PATTERN = re.compile(
+    r'\b(?:TODO|FIXME|XXX|NotImplementedError)\b|throw\s+new\s+Error\s*\(\s*["\'][^"\']*not\s+implemented',
+    re.IGNORECASE,
+)
+
 SCANNABLE_EXTS = {'.ts', '.tsx', '.js', '.jsx', '.mjs'}
 SIZE_CHECK_EXTS = {'.ts', '.tsx', '.js', '.jsx', '.mjs', '.css'}
 IGNORED_DIRS = {'.git', 'node_modules', 'dist', 'dist-web', 'target', '__pycache__', '.deno'}
+
+
+def scan_stubs(base_dir: str) -> list:
+    hits = []
+    if not os.path.isdir(base_dir):
+        return hits
+    for root, dirs, files in os.walk(base_dir):
+        dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
+        for fname in files:
+            if os.path.splitext(fname)[1].lower() not in SCANNABLE_EXTS:
+                continue
+            fpath = os.path.join(root, fname)
+            rel = os.path.relpath(fpath, base_dir)
+            try:
+                with open(fpath, "r", encoding="utf-8-sig", errors="ignore") as fp:
+                    for line_no, line in enumerate(fp, start=1):
+                        if STUB_PATTERN.search(line):
+                            hits.append(f"{rel}:{line_no} -> {line.strip()[:80]}")
+            except Exception:
+                pass
+    return hits
 
 
 def scan_oversized_files(base_dir: str, max_lines: int = 1200, max_bytes: int = 102400) -> list:
@@ -189,6 +217,7 @@ def run_guard(
 
     logic_violations = scan_files(logic_dir, FORBIDDEN_LOGIC_PATTERNS)
     view_warnings = scan_files(view_dir, VIEW_HARDCODE_PATTERNS)
+    stub_warnings = scan_stubs(logic_dir) + scan_stubs(view_dir)
     manifest_errors = validate_manifest(manifest_path)
     size_advisories = scan_oversized_files(view_dir) + scan_oversized_files(logic_dir)
 
@@ -213,6 +242,15 @@ def run_guard(
     else:
         print("[PASS] View Binding: Zero raw asset paths or direct Audio instantiations found.")
 
+    if stub_warnings:
+        print(f"\n[WARN] Anti-Stub Guard found {len(stub_warnings)} unfinished TODO/FIXME/NotImplemented marker(s):")
+        for s in stub_warnings[:10]:
+            print(f"  - {s}")
+        if len(stub_warnings) > 10:
+            print(f"  ... and {len(stub_warnings) - 10} more.")
+    else:
+        print("[PASS] Anti-Stub Guard: Zero TODO/FIXME/NotImplemented markers in logic/view.")
+
     if size_advisories:
         print(f"\n[ADVISORY] Oversized file modularity warnings ({len(size_advisories)}):")
         for adv in size_advisories:
@@ -220,7 +258,7 @@ def run_guard(
 
     print("=" * 65)
     has_errors = bool(logic_violations or manifest_errors)
-    if has_errors or (strict and view_warnings):
+    if has_errors or (strict and (view_warnings or stub_warnings)):
         return 1
     return 0
 

@@ -1,12 +1,14 @@
 # 엘잭 스킬 (LJack Protocol)
-## 범용 런타임 하네스 엔지니어링 & 자율 에이전틱 개발 프로토콜 (v7.6.0)
+## 범용 런타임 하네스 엔지니어링 & 자율 에이전틱 개발 프로토콜 (v7.7.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-blue.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-7.6.0-green.svg)](#)
+[![Version](https://img.shields.io/badge/Version-7.7.0-green.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
-본 모듈은 AI 에이전트가 소프트웨어 개발 시 사소한 기술 확인을 위해 중간에 멈추지 않고,  
-견고한 **[설계/톤앤매너 고정 ➔ 스캐폴딩 ➔ 코딩 ➔ 자체 테스트 ➔ 자가 치유(Self-Healing) ➔ 비주얼/인터랙션/닥터/UX카피 감사 ➔ 격리 패키징 및 배포 준비]**까지 단일 흐름으로 완주하도록 규정하는 범용 아키텍처 프로토콜입니다.
+본 모듈은 AI 에이전트가 일반 소프트웨어(CLI, 데스크톱, API, 자동화 도구) 개발 시 사소한 기술 확인을 위해 중간에 멈추거나 스텁(Stub)으로 끝내지 않고,  
+견고한 **[스펙 계약 ➔ 코딩 ➔ 자체 테스트 ➔ 자가 치유(Self-Healing) ➔ 비주얼/인터랙션/닥터/UX카피 감사 ➔ 격리 패키징 및 배포 준비]**까지 단일 흐름으로 완주하도록 규정하는 범용 아키텍처 프로토콜입니다.
+
+> **스킬 경계**: 게임 개발 시에는 `ljack-game`(필요 시 `ljack-gamecode`)을 사용하며 본 스킬을 중복 호출하지 않습니다.
 
 > **⚠️ 버전 독립성 불변 원칙 (Version Independence Principle)**:  
 > 본 프로토콜의 버전(v7.6.0)과 대상 프로젝트(응용프로그램)의 자체 버전은 완전히 별개입니다.  
