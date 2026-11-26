@@ -58,3 +58,24 @@ func save_balance():
   godot --headless --export-release "Windows Desktop" dist/game.exe
   godot --headless --export-release "Web" dist_web/index.html
   ```
+
+---
+
+### 5. 실제 OpenGL 시각 E2E 검증 (`tests/UserE2E.tscn`)
+- `--headless` 1만 틱과 물리 봇만으로는 모달 크기 초과, 버튼 텍스트 잘림, 불필요한 스크롤바, 플로팅 HUD 겹침, 미니 모드(예: 360×220) 레이아웃 깨짐을 잡을 수 없습니다.
+- 실제 게임 씬을 기동해 상태를 순회하고 **`RenderingServer.frame_post_draw` 직후 Viewport PNG를 저장**한 뒤 이미지 파일로 직접 검수합니다:
+  ```gdscript
+  await RenderingServer.frame_post_draw
+  var img := get_viewport().get_texture().get_image()
+  if img != null:
+      img.save_png(out_dir + "/01_hud.png")
+  ```
+- E2E 시나리오에는 **플로팅 포드 간격**, **메뉴 드로어 열기/Esc 닫기**, **EN↔KO 실시간 언어 왕복 후 `refresh_labels()` 전파**, **시각 키 설정 충돌 스왑 및 기본값 복원**, **모드 전환(풀 화면 ↔ 미니 위젯)**을 반드시 포함합니다.
+
+---
+
+### 6. Godot 4.x 헤드리스 & GDScript 실전 함정 체크리스트
+- **`class_name` 헤드리스 캐시 이슈**: `--headless` 단일 스크립트 실행 시 새로 추가된 헬퍼 클래스의 전역 `class_name`이 `.godot` 캐시에 아직 없을 수 있으므로 `const Helper := preload("res://src/.../helper.gd")`로 명시 로드.
+- **타입 추론 `:=` 주의**: Untyped `Array`/`Dictionary` 인덱싱·조회에 `:=`를 쓰면 Variant 추론 오류가 발생할 수 있으므로 `str(...)`, `int(...)` 또는 명시적 타입(`: String`)을 지정.
+- **`RefCounted` 열거형 스코프**: `Control`을 상속하지 않는 `RefCounted` UI 헬퍼에서는 `Control.HORIZONTAL_ALIGNMENT_CENTER` 대신 전역 상수 `HORIZONTAL_ALIGNMENT_CENTER`를 사용.
+- **입력 마스킹 & 맵 전환 위생**: 키 설정 리스닝(`is_listening()`) 또는 입력창 포커스 중에는 `_unhandled_input` 전역 단축키를 차단하고, 맵/룸 전환 시 미수령 드랍 플러시·스테이지 오브젝트(`stage_obj` 그룹) 정리로 `(0, 0)` 원점 플로팅 텍스트 잔류를 방지.

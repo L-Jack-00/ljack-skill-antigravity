@@ -3,10 +3,10 @@
 
 [![Antigravity Skills](https://img.shields.io/badge/Antigravity-Skills-blue.svg)](https://deepmind.google/technologies/antigravity/)
 [![LJack Skill](https://img.shields.io/badge/ljack--skill-v7.7.0-green.svg)](#-1-ljack-skill-v770)
-[![LJack Game](https://img.shields.io/badge/ljack--game-v1.8.0_Vertical_Slice-purple.svg)](#-2-ljack-game-v180-vertical-slice--anti-stub-edition)
+[![LJack Game](https://img.shields.io/badge/ljack--game-v1.9.0_Visual_Physics_%26_UX-purple.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
 [![LJack GameCode](https://img.shields.io/badge/ljack--gamecode-v1.2.0-teal.svg)](#-3-ljack-gamecode-v120)
-[![Engines](https://img.shields.io/badge/Game_Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#-2-ljack-game-v180-vertical-slice--anti-stub-edition)
-[![Commercial Ready](https://img.shields.io/badge/Steam%20Ready-Atomic%20Save%20%7C%20Audio%20Rig%20%7C%20i18n-success.svg)](#-2-ljack-game-v180-vertical-slice--anti-stub-edition)
+[![Engines](https://img.shields.io/badge/Game_Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
+[![Commercial Ready](https://img.shields.io/badge/Steam%20Ready-Atomic%20Save%20%7C%20Audio%20Rig%20%7C%20i18n-success.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
 본 저장소는 AI 에이전트가 소프트웨어 및 게임 개발 시 기술적 결함(빌드, 테스트, 물리, 린트)을 자체 검증과 자가 치유(Self-Healing) 루프로 자율 완주하되, **스텁(Stub)·체크보드 폴백 상태로 조기 종료하지 않고 마일스톤 단위로 깊이 있게 완성**하도록 규정하는 **LJack 런타임 하네스 엔지니어링 프로토콜 모음(Suite)**입니다.
@@ -26,7 +26,7 @@
   - `harness_doctor.py`: AST 정적 분석 기반 하네스 준수율 채점(0~100) + JS/TS/CSS 거대 모듈·지연 저장 어드바이저리.
   - `ux_copy_linter.py`, `release_cleaner.py` (`--check-staging`), `pixel_luminance_guard.py` (`--mode`, `--preview-sheet`).
 
-### 2. 🎮 [ljack-game](./ljack-game/) (v1.8.0 Vertical Slice & Anti-Stub Edition)
+### 2. 🎮 [ljack-game](./ljack-game/) (v1.9.0 Visual Physics, Floating UX & Runtime Hygiene Edition)
 * **목적**: 마일스톤 기반 상용 인디 게임 개발 및 Steam/스토브/itch.io 출시 패키징.
 * **3-Phase 실행 파이프라인**:
   - **Phase 0 (볼륨 계약)**: `ROADMAP.md`에 마일스톤(M1~M4)과 적·아이템·스테이지 최소 볼륨 고정.
@@ -36,14 +36,14 @@
   - **Pygame (Python)** / **Tauri + HTML5 (Canvas/WebGL)** / **Godot Engine 4.x** / **Rust + Python Hybrid**
 * **상용 인디 게임 10대 핵심 기둥**:
   1. **고정 틱/렌더링 분리 (Fixed 60Hz Loop)**
-  2. **헤드리스 1만 틱 & DOM E2E 검증** (물리·승패 불변식 + 뷰·모달·호버·스크린샷 레이아웃 검증)
-  3. **입력 버퍼링 & 릴리즈 안전망**
-  4. **충돌 감사, Reachability & 경제 불변식** (상점 `stock >= 1`·소프트락 0건)
-  5. **게임 필, 실시간 튜너 & 서브 뷰 위생** ([F1]/[F2], `prefers-reduced-motion`, 뷰 전환 잔존 배너/툴팁 정리)
+  2. **헤드리스 1만 틱 & 실제 시각 E2E 검증** (물리·승패 불변식 + DOM/OpenGL Viewport PNG 스크린샷 레이아웃 & 다중 모드 검증)
+  3. **입력 버퍼링, 포커스 마스킹 & 릴리즈 안전망**
+  4. **충돌 감사, Reachability, 발 스탠스 캡슐 & 틈새 낙하 역검증** (`CapsuleShape2D`, 발판 틈새 낙하, 상점 `stock >= 1`·소프트락 0건)
+  5. **게임 필, 플로팅 UX, 실시간 튜너 & 전환 위생** ([F1]/[F2], `prefers-reduced-motion`, 플로팅 HUD·시각 키 설정, 맵 전환 시 잔존 드랍·텍스트 정리)
   6. **⭐ 플레이어블 검수 관문 (Playable Review Gate)**
   7. **원자적 세이브 & 경제 커밋 즉시 저장** (`os.replace`, 랜덤/경제 커밋 동기 저장 + `beforeunload` 플러시)
-  8. **다국어, 아이콘 분리 & 상용 릴리즈 봉인** (`locales/`, `PRODUCTION_BUILD=True`, 앱 아이콘 vs 인게임 SVG 분리)
-  9. **🎨 그래픽 실전 툴 나침반** (UI=Figma/SVG, 원화=Gemini 멀티레퍼런스/Batch 50%/SDXL 하이브리드, `#FFFFFF`/`#123466` 이원 배경, 도트=SD1.5, 효과=셰이더, 오프라인 시 SVG/프로시저럴 실구현)
+  8. **다국어(`refresh_labels()`), 아이콘 분리 & 상용 릴리즈 봉인** (`locales/`, `PRODUCTION_BUILD=True`, 앱 아이콘 vs 인게임 SVG 분리)
+  9. **🎨 그래픽 실전 툴 나침반** (UI=Figma/SVG, 원화=Gemini 멀티레퍼런스/Batch 50%/SDXL 하이브리드, `#FFFFFF`/`#123466` 이원 배경, 스프라이트-히트박스 ±1px 정렬, 도트=SD1.5, 효과=셰이더, 오프라인 시 SVG/프로시저럴 실구현)
   10. **🎵 무결점 오디오 런타임 하네스** (더미 폴백, WebAudio 제스처 가드, 3-Bus 볼륨)
 * **게임 툴킷**:
   - `vector_asset_builder.py`, `game_scaffolder.py`, `game_release_doctor.py` (`--phase 1|2`, 스텁/TODO 탐지, 에셋 실파일 연결률, Tauri/웹 세이브·풀블리드 아이콘·스테이징 캐시 누수 점검), `localization_linter.py`, `tick_sim_runner.py`, `play_preview_launcher.py`, `web_packager.py`.
@@ -69,7 +69,7 @@ ljack-skill-antigravity/
 │   ├── scripts/                      # scaffolder, doctor, ux_copy, cleaner, pixel_guard
 │   └── references/                   # rea_cleanroom, domain_guides, troubleshooting_playbook
 │
-├── ljack-game/                       # 🎮 멀티 엔진 게임 상용화 프로토콜 (v1.8.0)
+├── ljack-game/                       # 🎮 멀티 엔진 게임 상용화 프로토콜 (v1.9.0)
 │   ├── SKILL.md
 │   ├── README.md
 │   ├── scripts/                      # vector_builder, scaffolder, doctor, i18n_linter, sim_runner, preview, web_packager

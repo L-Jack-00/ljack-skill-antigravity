@@ -1,9 +1,9 @@
 # 엘잭 게임 프로토콜 (LJack Game Protocol)
-## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.8.0)
+## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.9.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-purple.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-1.8.0-green.svg)](#)
-[![Edition](https://img.shields.io/badge/Edition-Vertical%20Slice%20%26%20Anti--Stub-gold.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.9.0-green.svg)](#)
+[![Edition](https://img.shields.io/badge/Edition-Visual%20Physics%20%26%20Floating%20UX-gold.svg)](#)
 [![Engines](https://img.shields.io/badge/Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
@@ -13,7 +13,7 @@
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v1.8.0)
+## 📂 저장소 및 모듈 구조 (v1.9.0)
 
 ```text
 ljack-game/
