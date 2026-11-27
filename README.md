@@ -2,14 +2,15 @@
 ## 범용 소프트웨어 & 멀티 엔진 인디 게임 자율 에이전틱 개발 프로토콜
 
 [![Antigravity Skills](https://img.shields.io/badge/Antigravity-Skills-blue.svg)](https://deepmind.google/technologies/antigravity/)
-[![LJack Skill](https://img.shields.io/badge/ljack--skill-v7.7.0-green.svg)](#-1-ljack-skill-v770)
-[![LJack Game](https://img.shields.io/badge/ljack--game-v1.9.0_Visual_Physics_%26_UX-purple.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
-[![LJack GameCode](https://img.shields.io/badge/ljack--gamecode-v1.2.0-teal.svg)](#-3-ljack-gamecode-v120)
-[![Engines](https://img.shields.io/badge/Game_Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
-[![Commercial Ready](https://img.shields.io/badge/Steam%20Ready-Atomic%20Save%20%7C%20Audio%20Rig%20%7C%20i18n-success.svg)](#-2-ljack-game-v190-visual-physics-floating-ux--runtime-hygiene-edition)
+[![LJack Skill](https://img.shields.io/badge/ljack--skill-v7.8.0-green.svg)](#-1-ljack-skill-v780)
+[![LJack Game](https://img.shields.io/badge/ljack--game-v1.10.0_Slider_Tuning-purple.svg)](#-2-ljack-game-v1100-interactive-slider-tuning-edition)
+[![LJack GameCode](https://img.shields.io/badge/ljack--gamecode-v1.3.0-teal.svg)](#-3-ljack-gamecode-v130)
+[![Engines](https://img.shields.io/badge/Game_Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#-2-ljack-game-v1100-interactive-slider-tuning-edition)
+[![Commercial Ready](https://img.shields.io/badge/Steam%20Ready-Atomic%20Save%20%7C%20Audio%20Rig%20%7C%20i18n-success.svg)](#-2-ljack-game-v1100-interactive-slider-tuning-edition)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
-본 저장소는 AI 에이전트가 소프트웨어 및 게임 개발 시 기술적 결함(빌드, 테스트, 물리, 린트)을 자체 검증과 자가 치유(Self-Healing) 루프로 자율 완주하되, **스텁(Stub)·체크보드 폴백 상태로 조기 종료하지 않고 마일스톤 단위로 깊이 있게 완성**하도록 규정하는 **LJack 런타임 하네스 엔지니어링 프로토콜 모음(Suite)**입니다.
+본 저장소는 AI 에이전트가 소프트웨어 및 게임 개발 시 기술적 결함(빌드, 테스트, 물리, 린트)을 자체 검증과 자가 치유(Self-Healing) 루프로 자율 완주하되, **스텁(Stub)·체크보드 폴백 상태로 조기 종료하지 않고 마일스톤 단위로 깊이 있게 완성**하도록 규정하는 **LJack 런타임 하네스 엔지니어링 프로토콜 모음(Suite)**입니다.  
+또한 **수치·손맛·UI·연출 미세조정(Fine-Tuning)**을 요청한 경우에는 전체 적용·검증 절차를 생략하고 **실시간 슬라이더 기반 인터랙티브 샘플**을 먼저 출력하여 사용자가 값을 확정한 뒤 반영하도록 지원합니다.
 
 개발 목적과 아키텍처 제약 수준에 맞추어 **3가지 독립 프로토콜**로 제공됩니다:
 
@@ -17,17 +18,18 @@
 
 ## 🏛️ 하위 프로토콜 안내
 
-### 1. 🛠️ [ljack-skill](./ljack-skill/) (v7.7.0)
+### 1. 🛠️ [ljack-skill](./ljack-skill/) (v7.8.0)
 * **목적**: 일반 소프트웨어(CLI, 데스크톱 GUI, 웹 백엔드/프론트엔드, 자동화 도구, Rust-Python 이원화 하네스, REA 역공학 클린룸 재구축). *(게임 개발 시에는 `ljack-game`을 사용하며 중복 호출하지 않습니다.)*
-* **10대 기둥**: 코어/IO 분리(Rust 코어 + Python 인터페이스 공식 지원), 슈퍼바이저 루프, 명시적 FSM, 이벤트 기반 유휴 대기, 디바운스 종료 `flush()`·오버레이 특이성·JS/TS/CSS 거대 모듈 진단, 물리 입력 자가 치유, 독자 중심 UX 카피 무결성 가드, (GUI) 풀블리드 `1024x1024` 아이콘·누끼 보색 시트(`#479be6`)·인터랙션 접근성(`aria-disabled`).
+* **10대 기둥 & Fast-Path**: 코어/IO 분리(Rust 코어 + Python 인터페이스 공식 지원), 슈퍼바이저 루프, 명시적 FSM, 이벤트 기반 유휴 대기, 디바운스 종료 `flush()`·오버레이 특이성·JS/TS/CSS 거대 모듈 진단, 물리 입력 자가 치유, 독자 중심 UX 카피 무결성 가드, (GUI) 풀블리드 `1024x1024` 아이콘·누끼 보색 시트(`#479be6`)·인터랙션 접근성(`aria-disabled`), **미세조정 슬라이더 샘플 우선 출력 Fast-Path**.
 * **안티-스텁 원칙**: `TODO`/빈 핸들러/더미 응답 잔존 시 완료 보고 금지 및 패키징/정리 단계 후순위화.
 * **번들링 도구**:
   - `harness_scaffolder.py`: 10대 기둥 표준 골격 즉시 생성 (CLI, Desktop, API, Rust-Python Hybrid 지원).
   - `harness_doctor.py`: AST 정적 분석 기반 하네스 준수율 채점(0~100) + JS/TS/CSS 거대 모듈·지연 저장 어드바이저리.
   - `ux_copy_linter.py`, `release_cleaner.py` (`--check-staging`), `pixel_luminance_guard.py` (`--mode`, `--preview-sheet`).
 
-### 2. 🎮 [ljack-game](./ljack-game/) (v1.9.0 Visual Physics, Floating UX & Runtime Hygiene Edition)
+### 2. 🎮 [ljack-game](./ljack-game/) (v1.10.0 Interactive Slider Tuning Edition)
 * **목적**: 마일스톤 기반 상용 인디 게임 개발 및 Steam/스토브/itch.io 출시 패키징.
+* **미세조정 Fast-Path**: 손맛·물리·VFX·UI 배치·밸런스 미세조정 요청 시 Phase 0~2 전체 적용 과정을 생략하고 `<input type="range">` 슬라이더 + 실시간 프리뷰 + JSON 복사 샘플을 우선 출력.
 * **3-Phase 실행 파이프라인**:
   - **Phase 0 (볼륨 계약)**: `ROADMAP.md`에 마일스톤(M1~M4)과 적·아이템·스테이지 최소 볼륨 고정.
   - **Phase 1 (수직 슬라이스 집중 구현)**: 초기부터 `i18n`/디버그 봉인/패키징에 토큰을 소진하지 않고 코어 루프·적 AI·연출·SVG/프로시저럴 비주얼·WebAudio 깊이에 집중 (`TODO`/체크보드 폴백 방치 금지).
@@ -48,12 +50,12 @@
 * **게임 툴킷**:
   - `vector_asset_builder.py`, `game_scaffolder.py`, `game_release_doctor.py` (`--phase 1|2`, 스텁/TODO 탐지, 에셋 실파일 연결률, Tauri/웹 세이브·풀블리드 아이콘·스테이징 캐시 누수 점검), `localization_linter.py`, `tick_sim_runner.py`, `play_preview_launcher.py`, `web_packager.py`.
 
-### 3. 🧩 [ljack-gamecode](./ljack-gamecode/) (v1.2.0)
+### 3. 🧩 [ljack-gamecode](./ljack-gamecode/) (v1.3.0)
 * **목적**: TypeScript/ESM(`.js + JSDoc`)·HTML5(Canvas/DOM) 기반 게임 제작 시 **계층 격리**, **계약 선행(Contract-First)**, **마일스톤 연속 완주**, **멀티모달 AI 에셋 브릿지**를 강제하는 코드 아키텍처 하네스.
-* **3대 제어 메커니즘**:
+* **3대 제어 메커니즘 & Fast-Path**:
   1. **레이어 강제 격리**: `src/logic/` 내부에서 `window`, `document`, `CanvasRenderingContext2D`, `AudioContext` 등 브라우저 API 호출 및 `TODO`/스텁을 `scripts/layer_guard.py --strict`로 차단.
   2. **에셋 브릿지 + 실구현 우선**: `specs/asset_manifest.json`에 `aiPromptHint` 및 누끼/참조 메타를 등록하되, 실제 파일이 디스크에 없을 때도 체크보드/비프음 폴백에만 머무르지 않고 `src/view/` 내 SVG·프로시저럴 캔버스·WebAudio 효과음을 직접 구현.
-  3. **마일스톤 단위 계층 순차 완주**: `specs/` 계약 ➔ `src/logic/` 순수 로직 ➔ `src/view/` 뷰·오디오 ➔ 테스트 순서를 지키며, 2~3파일 제한으로 조기 종료하지 않고 활성 마일스톤을 한 흐름으로 완결.
+  3. **마일스톤 단위 계층 순차 완주 & 미세조정 예외**: `specs/` 계약 ➔ `src/logic/` 순수 로직 ➔ `src/view/` 뷰·오디오 ➔ 테스트 순서를 지키되, 활성 마일스톤을 한 흐름으로 완결 (단, **미세조정 요청 시**에는 전체 계층 적용을 건너뛰고 슬라이더 샘플을 우선 출력).
 
 ---
 
@@ -63,19 +65,19 @@
 ljack-skill-antigravity/
 ├── README.md                         # [본 문서] LJack Protocol Suite 전체 안내
 │
-├── ljack-skill/                      # 🛠️ 범용 소프트웨어 엔지니어링 프로토콜 (v7.7.0)
+├── ljack-skill/                      # 🛠️ 범용 소프트웨어 엔지니어링 프로토콜 (v7.8.0)
 │   ├── SKILL.md
 │   ├── README.md
 │   ├── scripts/                      # scaffolder, doctor, ux_copy, cleaner, pixel_guard
 │   └── references/                   # rea_cleanroom, domain_guides, troubleshooting_playbook
 │
-├── ljack-game/                       # 🎮 멀티 엔진 게임 상용화 프로토콜 (v1.9.0)
+├── ljack-game/                       # 🎮 멀티 엔진 게임 상용화 프로토콜 (v1.10.0)
 │   ├── SKILL.md
 │   ├── README.md
 │   ├── scripts/                      # vector_builder, scaffolder, doctor, i18n_linter, sim_runner, preview, web_packager
 │   └── references/                   # rust_hybrid, audio, graphics_compass, steam, tauri, godot, game_feel, physics
 │
-└── ljack-gamecode/                   # 🧩 TypeScript/ESM·HTML5 계층 격리 & AI 에셋 브릿지 하네스 (v1.2.0)
+└── ljack-gamecode/                   # 🧩 TypeScript/ESM·HTML5 계층 격리 & AI 에셋 브릿지 하네스 (v1.3.0)
     ├── SKILL.md
     ├── README.md
     ├── scripts/                      # layer_guard.py

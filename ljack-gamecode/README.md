@@ -1,7 +1,8 @@
 # 엘잭 게임코드 프로토콜 (LJack GameCode Protocol)
-## TypeScript/ESM·HTML5 계층 격리 · 마일스톤 연속 완주 · 멀티모달 에셋 브릿지 하네스 (v1.2.0)
+## TypeScript/ESM·HTML5 계층 격리 · 마일스톤 연속 완주 · 멀티모달 에셋 브릿지 하네스 (v1.3.0)
 
-`ljack-gamecode`는 TypeScript/ESM(`.js + JSDoc`) 및 HTML5(Canvas + DOM/CSS 하이브리드) 게임 개발 시 **스파게티 코드 양산**, **순수 로직 계층의 브라우저 API 오염**, **임의의 경로 하드코딩**을 차단하면서도, **에이전트가 2~3파일만 수정하고 조기 종료하거나 스텁·체크보드 상태로 방치하지 않도록** 설계된 계약 선행(Contract-First) 게임 코드 하네스입니다.
+`ljack-gamecode`는 TypeScript/ESM(`.js + JSDoc`) 및 HTML5(Canvas + DOM/CSS 하이브리드) 게임 개발 시 **스파게티 코드 양산**, **순수 로직 계층의 브라우저 API 오염**, **임의의 경로 하드코딩**을 차단하면서도, **에이전트가 2~3파일만 수정하고 조기 종료하거나 스텁·체크보드 상태로 방치하지 않도록** 설계된 계약 선행(Contract-First) 게임 코드 하네스입니다.  
+(단, 수치·연출·UI **미세조정 요청** 시에는 전체 적용 절차를 거치지 않고 **슬라이더 기반 인터랙티브 샘플**을 우선 출력하여 사용자 확정 후 반영합니다.)
 
 ---
 
@@ -22,7 +23,7 @@ ljack-gamecode/
 
 ---
 
-## 🛡️ 3대 핵심 원칙 (v1.2.0)
+## 🛡️ 3대 핵심 원칙 (v1.3.0)
 
 1. **레이어 강제 격리 (`Layer Isolation`)**:
    - `src/logic/`은 순수 연산과 `EventBus.emit()`만 수행하며, `window`, `document`, `CanvasRenderingContext2D`, `AudioContext` 등 브라우저 API 접근을 `scripts/layer_guard.py`로 차단합니다.

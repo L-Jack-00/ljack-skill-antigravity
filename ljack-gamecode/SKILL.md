@@ -1,8 +1,8 @@
 ---
 name: ljack-gamecode
 description: >-
-  엘잭 게임코드 프로토콜 (LJack GameCode Protocol, v1.2.0): 계층 격리, 계약 선행(Contract-First),
-  마일스톤 연속 완주 및 멀티모달 AI 에셋 브릿지 기반 TypeScript/ESM·HTML5(Canvas/DOM) 게임 아키텍처 하네스.
+  엘잭 게임코드 프로토콜 (LJack GameCode Protocol, v1.3.0): 계층 격리, 계약 선행(Contract-First),
+  마일스톤 연속 완주, 미세조정 슬라이더 샘플 Fast-Path 및 멀티모달 AI 에셋 브릿지 기반 TypeScript/ESM·HTML5(Canvas/DOM) 게임 아키텍처 하네스.
   사용자가 'ljack-gamecode', '게임코드', '게임 코드 하네스', '레이어 격리', 'aiPromptHint', '에셋 매니페스트',
   'Contract First', '스파게티 방지' 등을 요청하거나,
   src/logic 내 브라우저 미디어 API 차단, 마일스톤 단위 계층 순차 구현, 외부 AI 도구(Gemini Nano Banana/Batch, ComfyUI/SDXL, PixelLab, Recraft, ElevenLabs, Suno 등) 프롬프트 연동 및
@@ -10,12 +10,15 @@ description: >-
 ---
 
 # 엘잭 게임코드 프로토콜 (LJack GameCode Protocol)
-## 계층 격리 · 마일스톤 연속 완주 · 멀티모달 에셋 브릿지 TypeScript/ESM·HTML5 하네스 (v1.2.0)
+## 계층 격리 · 마일스톤 연속 완주 · 멀티모달 에셋 브릿지 TypeScript/ESM·HTML5 하네스 (v1.3.0)
 
 > **💡 시스템 지침 (System Directive)**:  
 > 본 프로토콜은 TypeScript/ESM(`.js + JSDoc`) 및 HTML5(Canvas + DOM/CSS 하이브리드) 게임 개발 시 **스파게티 코드 양산**, **`src/logic/`의 브라우저 API 오염**, **임의 파일 경로 하드코딩**을 차단하기 위한 **아키텍처 경계 하네스(Architecture Boundary Harness)**입니다.  
 >
 > **실행 속도 & 깊이 원칙**: 계층을 분리한다는 이유로 2~3개 파일만 고치고 작업을 조기 종료하지 마십시오. 활성화된 **마일스톤(또는 기능 단위)** 전체가 동작하고 테스트를 통과할 때까지 `계약(specs) ➔ 순수 로직(src/logic) ➔ 뷰/오디오(src/view) ➔ 검증` 흐름을 **중단 없이 연속 완주**합니다. (`ljack-game`과 병행 시 게임 볼륨/Phase 규율은 `ljack-game`을 따르며, `ljack-skill`은 중복 호출하지 않습니다.)
+>
+> **⚡ 미세조정 Fast-Path (Interactive Slider Sample First)**:  
+> 사용자가 신규 시스템이나 아키텍처 추가가 아니라 **물리·타이밍·이펙트 강도·레이아웃 수치 등의 미세조정(Fine-Tuning)**을 요청했다고 판단되는 경우에는 `specs/` ➔ `src/logic/` ➔ `src/view/` ➔ `layer_guard` 전체 적용 과정을 거치지 않습니다. 즉시 대상 파라미터를 `<input type="range">` 슬라이더로 실시간 조작·확인할 수 있는 **단일 인터랙티브 HTML/Canvas 튜닝 샘플**(`generative_ui` 지원 시 인라인 위젯/아티팩트, 수치 리드아웃·초기화·JSON 복사 포함)을 먼저 출력하고, 사용자가 수치를 확정한 뒤에만 본 코드(`specs/`·`src/`)에 반영하고 `layer_guard.py --strict` 검증을 수행합니다.
 
 ---
 
@@ -23,7 +26,7 @@ description: >-
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                 LJack GameCode 3대 제어 메커니즘 (v1.2.0)               │
+│                 LJack GameCode 3대 제어 메커니즘 (v1.3.0)               │
 ├────────────────────────────────────────────────────────────────────────┤
 │ 1. 레이어 강제 격리 (Layer Isolation Guard)                            │
 │    - src/logic/ 내부에서 window, Canvas, AudioContext 등 DOM/미디어 API │

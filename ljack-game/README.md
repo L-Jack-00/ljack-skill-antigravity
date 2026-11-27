@@ -1,19 +1,20 @@
 # 엘잭 게임 프로토콜 (LJack Game Protocol)
-## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.9.0)
+## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.10.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-purple.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-1.9.0-green.svg)](#)
-[![Edition](https://img.shields.io/badge/Edition-Visual%20Physics%20%26%20Floating%20UX-gold.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.10.0-green.svg)](#)
+[![Edition](https://img.shields.io/badge/Edition-Visual%20Physics%20%26%20Slider%20Tuning-gold.svg)](#)
 [![Engines](https://img.shields.io/badge/Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
-본 모듈은 AI 에이전트가 게임을 얕은 스캐폴드나 스텁(Stub)으로 대충 끝내지 않고, **Phase 0(스펙·볼륨 계약) ➔ Phase 1(마일스톤 수직 슬라이스 반복 구현·시뮬레이션/시각 검증) ➔ Phase 2(플레이어블 검수·상용 릴리즈 닥터 마감)** 순서로 깊이 있게 완주하도록 설계된 상용 인디 게임 개발 프로토콜입니다.
+본 모듈은 AI 에이전트가 게임을 얕은 스캐폴드나 스텁(Stub)으로 대충 끝내지 않고, **Phase 0(스펙·볼륨 계약) ➔ Phase 1(마일스톤 수직 슬라이스 반복 구현·시뮬레이션/시각 검증) ➔ Phase 2(플레이어블 검수·상용 릴리즈 닥터 마감)** 순서로 깊이 있게 완주하도록 설계된 상용 인디 게임 개발 프로토콜입니다.  
+(단, 수치·손맛·연출·UI **미세조정 요청** 시에는 전체 적용 절차를 거치지 않고 **슬라이더 기반 인터랙티브 샘플**을 먼저 출력하여 확정값을 받은 뒤 반영합니다.)
 
 > **스킬 조합 안내**: 게임 개발 시 일반 소프트웨어용 `ljack-skill`은 중복 로드하지 마십시오 (`ljack-game`에 핵심 하네스 규율이 통합되어 있습니다). TypeScript/ESM·HTML5 계층 격리가 필요할 때만 `ljack-gamecode`를 보조 아키텍처 가드로 병행합니다.
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v1.9.0)
+## 📂 저장소 및 모듈 구조 (v1.10.0)
 
 ```text
 ljack-game/
