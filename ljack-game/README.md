@@ -1,9 +1,9 @@
 # 엘잭 게임 프로토콜 (LJack Game Protocol)
-## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.10.0)
+## 마일스톤 기반 상용 인디 게임 개발 & 멀티 엔진 런타임 하네스 프로토콜 (v1.11.0)
 
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Skill-purple.svg)](https://deepmind.google/technologies/antigravity/)
-[![Version](https://img.shields.io/badge/Version-1.10.0-green.svg)](#)
-[![Edition](https://img.shields.io/badge/Edition-Visual%20Physics%20%26%20Slider%20Tuning-gold.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.11.0-green.svg)](#)
+[![Edition](https://img.shields.io/badge/Edition-Floating%20UX%20%26%20Input%20Polish-gold.svg)](#)
 [![Engines](https://img.shields.io/badge/Engines-Pygame%20%7C%20Tauri%20%7C%20Godot%20%7C%20Rust-orange.svg)](#)
 [![License](https://img.shields.io/badge/License-Private-red.svg)](#)
 
@@ -14,7 +14,7 @@
 
 ---
 
-## 📂 저장소 및 모듈 구조 (v1.10.0)
+## 📂 저장소 및 모듈 구조 (v1.11.0)
 
 ```text
 ljack-game/
@@ -50,11 +50,11 @@ ljack-game/
 ### 10대 핵심 기둥 요약
 1. **결정론적 고정 틱과 렌더링 분리 (Fixed 60Hz Loop)**
 2. **헤드리스 1만 틱 & DOM E2E 시뮬레이터**
-3. **입력 버퍼링 & 릴리즈 안전망 (Input Buffer & Stuck Guard)**
+3. **입력 버퍼링, 비간섭 단축키 & 릴리즈 안전망 (Input Buffer, Non-Interrupting Hotkeys & Stuck Guard)**
 4. **충돌 감사 & Reachability / 소프트락 검증**
-5. **게임 필(Game Feel) & 실시간 튜너 ([F1]/[F2])**
+5. **게임 필(Game Feel), 플로팅 UX(`Esc` LIFO · 탭 레이아웃 불변) & 실시간 튜너 ([F1]/[F2])**
 6. **⭐ 플레이어블 검수 관문 (Playable Review Gate)**
 7. **세이브 데이터 원자적 안전망 (Atomic Save & 즉시 커밋)**
 8. **다국어 & 상용 릴리즈 봉인 (Commercial Release Rig)**
-9. **🎨 그래픽 실전 툴 나침반 & SVG/프로시저럴 실구현**
+9. **🎨 그래픽 실전 툴 나침반, 하이브리드 비트맵 폰트 & SVG/프로시저럴 실구현**
 10. **🎵 무결점 오디오 & 사운드 런타임 하네스 (Audio Safety Rig)**
